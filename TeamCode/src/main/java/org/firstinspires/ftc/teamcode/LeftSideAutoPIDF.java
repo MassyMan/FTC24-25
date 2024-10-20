@@ -281,30 +281,30 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
                     new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
                     new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
-                    new MoveCRServoAction(intake, -0.7, 0.5), // Outtake preload
+                    new MoveCRServoAction(intake, -0.5, 0.5), // Outtake preload
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
                     new SlideLiftAction(slideLift, 0), // Lower slides
 
-                    // Run strafe and intake spinning in parallel
+                    // 1ST YELLOW OFF FLOOR
+
                     drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
                             .turn(Math.toRadians(-55))
                             .strafeTo(new Vector2d(-38, -45)) // Strafe to (-45, -22)
                             .build(),
                     new MoveServoAction(v4Bar, 0.708), // Lower v4Bar to GROUND
-
                     drive.actionBuilder(new Pose2d(-37,-45, Math.toRadians(180)))
-                            .strafeTo(new Vector2d(-37, -21))
+                            .strafeTo(new Vector2d(-37, -23.5))
                             .build(),
-                    new SetCRServoPowerAction(intake, 0.8),
+                    new SetCRServoPowerAction(intake, 1),
 
-                    drive.actionBuilder(new Pose2d(-37, -21, Math.toRadians(180)))
-                            .strafeTo(new Vector2d(-47, -21))
+                    drive.actionBuilder(new Pose2d(-37, -23.5, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-44, -23.5))
                             .build(),
 
                     new SetCRServoPowerAction(intake,0),
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar TO TOP
 
-                    drive.actionBuilder(new Pose2d(-45, -21, Math.toRadians(180)))
+                    drive.actionBuilder(new Pose2d(-44, -23.5, Math.toRadians(180)))
                             .strafeTo(new Vector2d(-58, -52))
                             .turn(Math.toRadians(55))
                             .build(),
@@ -315,36 +315,75 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
                     new SlideLiftAction(slideLift, 0), // Lower slides
 
+                    // 2ND YELLOW OFF FLOOR
 
                     drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
                             .turn(Math.toRadians(-55))
-                            .strafeTo(new Vector2d(-47, -21)) // Strafe to
+                            .strafeTo(new Vector2d(-40, -23.5)) // Strafe to
                             .build(),
 
                     new MoveServoAction(v4Bar, 0.708), // Move v4Bar TO GROUND
-                    new SetCRServoPowerAction(intake,0.8),
+                    new SetCRServoPowerAction(intake,1),
+                    new WaitAction(0.8),
 
                     // TODO: Simplify these positions with variables for the pose instead of manual coordinates
                     // TODO: Ask chatgpt about it rehehe
 
-                    drive.actionBuilder(new Pose2d(-47, -21, Math.toRadians(180)))
-                            .strafeTo(new Vector2d(-57, -21)) // Strafe to
+                    drive.actionBuilder(new Pose2d(-40, -23.5, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-53, -23.5)) // Strafe to
                             .build(),
 
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
                     new SetCRServoPowerAction(intake,0),
 
-                    drive.actionBuilder(new Pose2d(-57, -21, Math.toRadians(180)))
+                    drive.actionBuilder(new Pose2d(-53, -23.5, Math.toRadians(180)))
                             .strafeTo(new Vector2d(-58, -52))
                             .turn(Math.toRadians(55))
                             .build(),
 
                     new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
                     new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
-                    new MoveCRServoAction(intake, -0.7, 0.5), // Outtake preload
+                    new MoveCRServoAction(intake, -0.5, 0.5), // Outtake preload
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
                     new SlideLiftAction(slideLift, 0) // Lower slides
 
+                    /* 3RD YELLOW OFF FLOOR
+
+                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
+                            .turn(Math.toRadians(-55))
+                            .strafeTo(new Vector2d(-53, -23.5)) // Strafe to
+                            .build(),
+
+                    new MoveServoAction(v4Bar, 0.708), // Move v4Bar TO GROUND
+                    new SetCRServoPowerAction(intake,1),
+                    new WaitAction(0.8),
+
+                    // TODO: Simplify these positions with variables for the pose instead of manual coordinates
+                    // TODO: Ask chatgpt about it rehehe
+
+                    drive.actionBuilder(new Pose2d(-53, -23.5, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-61, -23.5)) // Strafe to
+                            .build(),
+
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
+                    new SetCRServoPowerAction(intake,0),
+
+                    drive.actionBuilder(new Pose2d(-61, -23.5, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-58, -52))
+                            .turn(Math.toRadians(55))
+                            .build(),
+
+                    new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
+                    new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
+                    new MoveCRServoAction(intake, -0.5, 0.5), // Outtake preload
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
+                    new SlideLiftAction(slideLift, 0), // Lower slides
+
+                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(255)))
+                            .turn(Math.toRadians(-55))
+                            .strafeTo(new Vector2d(36, -60))
+                            .build()
+                */
             ));
         }
     }
