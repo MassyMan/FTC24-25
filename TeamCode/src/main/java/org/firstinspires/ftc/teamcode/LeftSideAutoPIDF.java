@@ -30,14 +30,15 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     public static double kF = 0.3;     // Feedforward gain
     public static final int THRESHOLD = 100; // Threshold for stopping
     private static final int MAX_TICKS = 3950; // Max encoder position for the slides
-    private static final double HOLD_POWER = 0.1; // Small power to hold position
+    private static final double HOLD_POWER = 0.05; // Small power to hold position
     private static final double MIN_DOWN_POWER = -0.1; // Minimum power for downward movement
 
     public class MoveCRServoAction implements Action {
-        private CRServo servo; // Change to CRServo
+        private CRServo servo;
         private double power;
         private double duration; // Duration in seconds
         private ElapsedTime timer = new ElapsedTime();
+        private boolean timerStarted = false; // Flag to check if the timer is started
 
         public MoveCRServoAction(CRServo servo, double power, double duration) {
             this.servo = servo;
@@ -47,6 +48,12 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
         @Override
         public boolean run(TelemetryPacket packet) {
+            // Start the timer only when the action is first executed
+            if (!timerStarted) {
+                timer.reset();
+                timerStarted = true;
+            }
+
             // If the timer hasn't exceeded the duration, keep running the servo
             if (timer.seconds() < duration) {
                 servo.setPower(power); // Set the power
@@ -71,6 +78,25 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         public boolean run(TelemetryPacket packet) {
             servo.setPosition(position); // Set the servo to the desired position
             return false; // Immediately complete this action
+        }
+    }
+
+    public class ParallelAction implements Action {
+        private Action[] actions;
+
+        public ParallelAction(Action... actions) {
+            this.actions = actions;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            boolean allComplete = true;
+            for (Action action : actions) {
+                if (action != null) {
+                    allComplete &= action.run(packet); // Run each action
+                }
+            }
+            return !allComplete; // Return true if any action is still running
         }
     }
 
@@ -163,75 +189,162 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             // Move the slides
             slideLift.moveSlides(targetTicks);
 
-            // Check if the current position is within the threshold
-            int currentPosition = slideLift.vertL.getCurrentPosition(); // Get current position of vertL
+            // Get current position of vertL
+            int currentPosition = slideLift.vertL.getCurrentPosition();
             double error = Math.abs(targetTicks - currentPosition); // Calculate the error
+
+            // If the target is 0 or close to 0, stop the slides completely
+            if (targetTicks == 0 && currentPosition <= 50) {
+                slideLift.stopSlides(); // Stop the slides
+                return false; // Action completes immediately
+            }
 
             // If within the threshold, return false to stop the action
             return error > THRESHOLD; // Return true to continue running
         }
     }
 
-    public class WaitAction implements Action {
-        private ElapsedTime timer = new ElapsedTime();
-        private double seconds;
+    // Action to stop the slides completely
+    public class StopSlideAction implements Action {
+        private SlideLift slideLift;
 
-        public WaitAction(double seconds) {
-            this.seconds = seconds;
-            timer.reset();
+        public StopSlideAction(SlideLift slideLift) {
+            this.slideLift = slideLift;
         }
 
         @Override
         public boolean run(TelemetryPacket packet) {
+            slideLift.stopSlides(); // Stop both motors
+            return false; // Action completes immediately
+        }
+    }
+
+    public class WaitAction implements Action {
+        private ElapsedTime timer = new ElapsedTime();
+        private double seconds;
+        private boolean timerStarted = false; // Add a flag to track if the timer has been started
+
+        public WaitAction(double seconds) {
+            this.seconds = seconds;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            // Start the timer the first time this method is called
+            if (!timerStarted) {
+                timer.reset();
+                timerStarted = true; // Mark the timer as started
+            }
+
+            // Continue waiting until the timer reaches the specified duration
             return timer.seconds() < seconds; // Return true while waiting
         }
     }
+
+    public class SetCRServoPowerAction implements Action {
+        private CRServo servo;
+        private double power;
+
+        public SetCRServoPowerAction(CRServo servo, double power) {
+            this.servo = servo;
+            this.power = power;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            servo.setPower(power); // Set the power of the CRServo
+            return false; // Complete this action immediately
+        }
+    }
+
 
     @Override
     public void runOpMode() {
         // Initialize drive and slide system
         Pose2d startPose = new Pose2d(-36, -60, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
-        slideLift = new SlideLift(hardwareMap);  // Initialize slide lift with hardwareMap
+        slideLift = new SlideLift(hardwareMap);
+        v4Bar = hardwareMap.get(Servo.class, "v4Bar");
+        intake = hardwareMap.get(CRServo.class, "intake");
 
-        // Initialize the v4Bar servo
-        v4Bar = hardwareMap.get(Servo.class, "v4Bar"); // Initialize the servo
-        v4Bar.setPosition(0.02077); // Move the servo to position 0.02077
-
-        // Initialize the intake CR servo
-        intake = hardwareMap.get(CRServo.class, "intake"); // Initialize the CR servo
-        intake.setPower(0); // Set it to neutral initially
-
-        // Hold the servo position during initialization
-        while (!isStarted() && !isStopRequested()) {
-            telemetry.addData("Status", "Waiting for start");
-            telemetry.addData("v4Bar Position", v4Bar.getPosition());
-            telemetry.update();
-        }
-
+        // Wait for the start signal
         waitForStart();
 
+        // Check if the OpMode is active
         if (opModeIsActive()) {
-            // Autonomous sequence
+            // Run autonomous sequence
             Actions.runBlocking(new SequentialAction(
-                    // Drive movement
                     drive.actionBuilder(startPose)
                             .strafeTo(new Vector2d(-58, -52))
                             .turn(Math.toRadians(55))
                             .build(),
-                    new SlideLiftAction(slideLift, 3400),  // Move to 3900 ticks
-                    new MoveServoAction(v4Bar, 0.20), // Move v4Bar to position 0.1878
-                    //new MoveCRServoAction(intake, -0.5, 1),
-                    new WaitAction(1),
-                    new MoveServoAction(v4Bar, 0.02077),
-                    new WaitAction(5.0), // Wait for 8 seconds
-                    new SlideLiftAction(slideLift, 10),  // Lower back to 10 ticks
+
+                    new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
+                    new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
+                    new MoveCRServoAction(intake, -0.7, 0.5), // Outtake preload
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
+                    new SlideLiftAction(slideLift, 0), // Lower slides
+
+                    // Run strafe and intake spinning in parallel
                     drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
                             .turn(Math.toRadians(-55))
-                            .strafeTo(new Vector2d(-38, -45))
-                            .strafeTo(new Vector2d(-38, -22))
-                            .strafeTo(new Vector2d(-36, -60))
-                            .build()
+                            .strafeTo(new Vector2d(-38, -45)) // Strafe to (-45, -22)
+                            .build(),
+                    new MoveServoAction(v4Bar, 0.708), // Lower v4Bar to GROUND
+
+                    drive.actionBuilder(new Pose2d(-37,-45, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-37, -21))
+                            .build(),
+                    new SetCRServoPowerAction(intake, 0.8),
+
+                    drive.actionBuilder(new Pose2d(-37, -21, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-47, -21))
+                            .build(),
+
+                    new SetCRServoPowerAction(intake,0),
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar TO TOP
+
+                    drive.actionBuilder(new Pose2d(-45, -21, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-58, -52))
+                            .turn(Math.toRadians(55))
+                            .build(),
+
+                    new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
+                    new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
+                    new MoveCRServoAction(intake, -0.7, 0.5), // Outtake preload
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
+                    new SlideLiftAction(slideLift, 0), // Lower slides
+
+
+                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
+                            .turn(Math.toRadians(-55))
+                            .strafeTo(new Vector2d(-47, -21)) // Strafe to
+                            .build(),
+
+                    new MoveServoAction(v4Bar, 0.708), // Move v4Bar TO GROUND
+                    new SetCRServoPowerAction(intake,0.8),
+
+                    // TODO: Simplify these positions with variables for the pose instead of manual coordinates
+                    // TODO: Ask chatgpt about it rehehe
+
+                    drive.actionBuilder(new Pose2d(-47, -21, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-57, -21)) // Strafe to
+                            .build(),
+
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
+                    new SetCRServoPowerAction(intake,0),
+
+                    drive.actionBuilder(new Pose2d(-57, -21, Math.toRadians(180)))
+                            .strafeTo(new Vector2d(-58, -52))
+                            .turn(Math.toRadians(55))
+                            .build(),
+
+                    new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
+                    new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
+                    new MoveCRServoAction(intake, -0.7, 0.5), // Outtake preload
+                    new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
+                    new SlideLiftAction(slideLift, 0) // Lower slides
+
             ));
         }
     }
