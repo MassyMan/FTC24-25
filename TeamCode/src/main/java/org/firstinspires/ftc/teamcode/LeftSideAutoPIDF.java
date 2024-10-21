@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -26,9 +27,9 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     private CRServo intake; // Continuous Rotation Servo for intake
 
     // PIDF control variables
-    public static double kP = 0.002;  // Proportional gain
-    public static double kF = 0.3;     // Feedforward gain
-    public static final int THRESHOLD = 100; // Threshold for stopping
+    public static double kP = 0.0023;  // Proportional gain
+    public static double kF = 0.32;     // Feedforward gain
+    public static final int THRESHOLD = 80; // Threshold for stopping
     private static final int MAX_TICKS = 3950; // Max encoder position for the slides
     private static final double HOLD_POWER = 0.05; // Small power to hold position
     private static final double MIN_DOWN_POWER = -0.1; // Minimum power for downward movement
@@ -258,6 +259,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     }
 
 
+
     @Override
     public void runOpMode() {
         // Initialize drive and slide system
@@ -270,16 +272,15 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         // Wait for the start signal
         waitForStart();
 
-        // Check if the OpMode is active
+        // Check if the OpMode is active -52 -58 and 55 deg for angleDROP
         if (opModeIsActive()) {
             // Run autonomous sequence
             Actions.runBlocking(new SequentialAction(
                     drive.actionBuilder(startPose)
-                            .strafeTo(new Vector2d(-58, -52))
-                            .turn(Math.toRadians(55))
+                            .strafeToLinearHeading(new Vector2d(-58, -52), Math.toRadians(230))
+                           // .afterDisp(1, new SlideLiftAction(slideLift, 3600))
                             .build(),
-
-                    new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
+                    new SlideLiftAction(slideLift, 3600),
                     new MoveServoAction(v4Bar, 0.15), // Move v4Bar to position 0.15
                     new MoveCRServoAction(intake, -0.5, 0.5), // Outtake preload
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar back
@@ -287,9 +288,8 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
                     // 1ST YELLOW OFF FLOOR
 
-                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
-                            .turn(Math.toRadians(-55))
-                            .strafeTo(new Vector2d(-38, -45)) // Strafe to (-45, -22)
+                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(230)))
+                            .strafeToLinearHeading(new Vector2d(-37, -45), Math.toRadians(180))
                             .build(),
                     new MoveServoAction(v4Bar, 0.708), // Lower v4Bar to GROUND
                     drive.actionBuilder(new Pose2d(-37,-45, Math.toRadians(180)))
@@ -305,8 +305,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                     new MoveServoAction(v4Bar, 0.02077), // Move v4Bar TO TOP
 
                     drive.actionBuilder(new Pose2d(-44, -23.5, Math.toRadians(180)))
-                            .strafeTo(new Vector2d(-58, -52))
-                            .turn(Math.toRadians(55))
+                            .strafeToLinearHeading(new Vector2d(-58, -52), Math.toRadians(230))
                             .build(),
 
                     new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
@@ -317,9 +316,8 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
                     // 2ND YELLOW OFF FLOOR
 
-                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(235)))
-                            .turn(Math.toRadians(-55))
-                            .strafeTo(new Vector2d(-40, -23.5)) // Strafe to
+                    drive.actionBuilder(new Pose2d(-58, -52, Math.toRadians(230)))
+                            .strafeToLinearHeading(new Vector2d(-40, -23.5), Math.toRadians(180))
                             .build(),
 
                     new MoveServoAction(v4Bar, 0.708), // Move v4Bar TO GROUND
@@ -337,8 +335,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                     new SetCRServoPowerAction(intake,0),
 
                     drive.actionBuilder(new Pose2d(-53, -23.5, Math.toRadians(180)))
-                            .strafeTo(new Vector2d(-58, -52))
-                            .turn(Math.toRadians(55))
+                            .strafeToLinearHeading(new Vector2d(-58, -52), Math.toRadians(230))
                             .build(),
 
                     new SlideLiftAction(slideLift, 3600), // Move slides to 3600 ticks
