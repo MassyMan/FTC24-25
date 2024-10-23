@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 
 @TeleOp(name = "Slide Control with Encoder", group = "TeleOp")
-public class SlideControlWithEncoder extends OpMode {
+public class encoderteste extends OpMode {
     // Define the servos and encoder
     private CRServo slidL, slidR;
     private AnalogInput axonR; // Analog encoder for slidL
@@ -17,15 +17,16 @@ public class SlideControlWithEncoder extends OpMode {
 
     // Voltage range constants (assuming a 0-5V analog signal)
     private static final double VOLTAGE_MIN = 0.0;
-    private static final double VOLTAGE_MAX = 3.3; // Adjust based on actual encoder range
+    private static final double VOLTAGE_MAX = 3.4; // Adjust based on actual encoder range
     private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
 
     // Threshold for detecting wraparound between 360 and 0 degrees
-    private static final double WRAPAROUND_THRESHOLD = 0.1; // Tolerance for crossing wraparound point
+    private static final double WRAPAROUND_THRESHOLD = 0.65; // Tolerance for crossing wraparound point
 
-    // Limits for the slides
-    private static final int MAX_ROTATIONS = 10; // Example: Adjust based on your slide limits
+    // Limits for degrees
+    private static final double EXTEND_LIMIT_DEGREES = 730.0;
+    private static final double RETRACT_LIMIT_DEGREES = 0.0;
 
     @Override
     public void init() {
@@ -55,12 +56,12 @@ public class SlideControlWithEncoder extends OpMode {
         // Calculate the total degrees traveled, including full rotations
         double totalDegrees = (fullRotations * 360) + currentDegrees;
 
-        // Define the limits for extension and retraction
-        if (gamepad2.left_stick_y > 0 && totalDegrees < MAX_ROTATIONS * 360) {
+        // Define the limits for extension and retraction based on the total degrees traveled
+        if (gamepad2.left_stick_y > 0 && totalDegrees < EXTEND_LIMIT_DEGREES) {
             // Extending slides: slidL positive, slidR negative
             slidL.setPower(1.0);
             slidR.setPower(-1.0);
-        } else if (gamepad2.left_stick_y < 0 && totalDegrees > 0) {
+        } else if (gamepad2.left_stick_y < 0 && totalDegrees > RETRACT_LIMIT_DEGREES) {
             // Retracting slides: slidL negative, slidR positive
             slidL.setPower(-1.0);
             slidR.setPower(1.0);
@@ -78,6 +79,8 @@ public class SlideControlWithEncoder extends OpMode {
         telemetry.addData("Degrees", currentDegrees);
         telemetry.addData("Full Rotations", fullRotations);
         telemetry.addData("Total Degrees", totalDegrees);
+        telemetry.addData("Extend Limit", EXTEND_LIMIT_DEGREES);
+        telemetry.addData("Retract Limit", RETRACT_LIMIT_DEGREES);
         telemetry.update();
     }
 }
