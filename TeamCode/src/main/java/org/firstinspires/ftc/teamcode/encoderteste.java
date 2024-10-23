@@ -21,12 +21,13 @@ public class encoderteste extends OpMode {
     private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
 
+
     // Threshold for detecting wraparound between 360 and 0 degrees
-    private static final double WRAPAROUND_THRESHOLD = 0.65; // Tolerance for crossing wraparound point
+    private static final double WRAPAROUND_THRESHOLD = 1.2; // Tolerance for crossing wraparound point
 
     // Limits for degrees
-    private static final double EXTEND_LIMIT_DEGREES = 730.0;
-    private static final double RETRACT_LIMIT_DEGREES = 0.0;
+    private static final double EXTEND_LIMIT_DEGREES = 860.0;
+    private static final double RETRACT_LIMIT_DEGREES = 150.0;
 
     @Override
     public void init() {
@@ -36,6 +37,8 @@ public class encoderteste extends OpMode {
         axonR = hardwareMap.get(AnalogInput.class, "axonR");
 
         previousVoltage = axonR.getVoltage();
+
+
     }
 
     @Override
@@ -43,6 +46,12 @@ public class encoderteste extends OpMode {
         // Get the current encoder voltage and calculate the degrees
         double currentVoltage = axonR.getVoltage();
         double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
+
+        // Reset the total degrees and rotations when D-pad down is pressed
+        if (gamepad2.dpad_down) {
+            fullRotations = 0;
+            previousVoltage = currentVoltage; // Reset to the current voltage
+        }
 
         // Detect full rotations by monitoring voltage changes (crossing 0 or 360 degrees)
         if (currentVoltage < VOLTAGE_MIN + WRAPAROUND_THRESHOLD && previousVoltage > VOLTAGE_MAX - WRAPAROUND_THRESHOLD) {

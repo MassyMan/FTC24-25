@@ -2,12 +2,13 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "PIDF Teleop", group = "TeleOp")
+@TeleOp(name = "Integrated Teleop with Slide Control", group = "TeleOp")
 public class Teleop extends OpMode {
     // Mecanum drive motors
     private DcMotor leftFront, leftBack, rightFront, rightBack;
@@ -22,6 +23,9 @@ public class Teleop extends OpMode {
     // Vertical slide motors
     private DcMotor vertL, vertR;
 
+    // Analog encoder for slidL
+    private AnalogInput axonR;
+
     // PIDF Controller variables
     private double kP = 0.003;
     private double kF = 0.2;  // Reduce kF to prevent overshoot at the bottom
@@ -32,8 +36,25 @@ public class Teleop extends OpMode {
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
-    private static final double V4BAR_MAX_POSITION = 0.91;
+    private static final double V4BAR_MAX_POSITION = 0.928;
     private double v4BarPosition = 0.19; // Start position for v4Bar
+
+    // Slide rotation tracking
+    private double previousVoltage = 0;
+    private int fullRotations = 0;
+
+    // Voltage range constants for the encoder (0-5V analog signal)
+    private static final double VOLTAGE_MIN = 0.0;
+    private static final double VOLTAGE_MAX = 3.39; // Adjust based on actual encoder range
+    private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
+    private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
+
+    // Threshold for detecting wraparound
+    private static final double WRAPAROUND_THRESHOLD = 1.5;
+
+    // Limits for degrees
+    private static final double EXTEND_LIMIT_DEGREES = 860.0;
+    private static final double RETRACT_LIMIT_DEGREES = 160.0;
 
     @Override
     public void init() {
@@ -65,57 +86,77 @@ public class Teleop extends OpMode {
         vertL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         vertR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // Initialize encoder and previous voltage
+        axonR = hardwareMap.get(AnalogInput.class, "axonR");
+        previousVoltage = axonR.getVoltage();
+
         // Initialize v4Bar position
         v4Bar.setPosition(v4BarPosition);
     }
 
     @Override
     public void loop() {
-        // Gamepad 1: Mecanum drive control
+        // Mecanum drive control
         double drive = -gamepad1.left_stick_y;
         double strafe = gamepad1.left_stick_x;
         double rotate = gamepad1.right_stick_x;
-
-        // Slow mode with right trigger
         double speedMultiplier = gamepad1.right_trigger > 0.1 ? 0.3 : 1.0;
 
-        double leftFrontPower = (drive + strafe + rotate) * speedMultiplier;
-        double leftBackPower = (drive - strafe + rotate) * speedMultiplier;
-        double rightFrontPower = (drive - strafe - rotate) * speedMultiplier;
-        double rightBackPower = (drive + strafe - rotate) * speedMultiplier;
+        leftFront.setPower(Range.clip((drive + strafe + rotate) * speedMultiplier, -1.0, 1.0));
+        leftBack.setPower(Range.clip((drive - strafe + rotate) * speedMultiplier, -1.0, 1.0));
+        rightFront.setPower(Range.clip((drive - strafe - rotate) * speedMultiplier, -1.0, 1.0));
+        rightBack.setPower(Range.clip((drive + strafe - rotate) * speedMultiplier, -1.0, 1.0));
 
-        leftFront.setPower(Range.clip(leftFrontPower, -1.0, 1.0));
-        leftBack.setPower(Range.clip(leftBackPower, -1.0, 1.0));
-        rightFront.setPower(Range.clip(rightFrontPower, -1.0, 1.0));
-        rightBack.setPower(Range.clip(rightBackPower, -1.0, 1.0));
+        // Slide rotation and extension control with reversed joystick direction
+        double currentVoltage = axonR.getVoltage();
+        double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
 
-        // Gamepad 2: CRServos for slides and servo controls
-        slidL.setPower(-gamepad2.left_stick_y);
-        slidR.setPower(gamepad2.left_stick_y); // Opposite direction
+        if (gamepad2.dpad_down) {
+            fullRotations = 0;
+            previousVoltage = currentVoltage;
+        }
+
+        if (currentVoltage < VOLTAGE_MIN + WRAPAROUND_THRESHOLD && previousVoltage > VOLTAGE_MAX - WRAPAROUND_THRESHOLD) {
+            fullRotations++;
+        } else if (currentVoltage > VOLTAGE_MAX - WRAPAROUND_THRESHOLD && previousVoltage < VOLTAGE_MIN + WRAPAROUND_THRESHOLD) {
+            fullRotations--;
+        }
+
+        double totalDegrees = (fullRotations * 360) + currentDegrees;
+
+        // Reverse direction of left_stick_y for slide control
+        if (gamepad2.left_stick_y < 0 && totalDegrees < EXTEND_LIMIT_DEGREES) {
+            slidL.setPower(1.0);
+            slidR.setPower(-1.0);
+        } else if (gamepad2.left_stick_y > 0 && totalDegrees > RETRACT_LIMIT_DEGREES) {
+            slidL.setPower(-1.0);
+            slidR.setPower(1.0);
+        } else {
+            slidL.setPower(0);
+            slidR.setPower(0);
+        }
+
+        previousVoltage = currentVoltage;
 
         // Intake control
         if (gamepad2.left_bumper) {
-            intake.setPower(1.0); // intake
+            intake.setPower(1.0); // Intake
         } else if (gamepad2.left_trigger > 0.1) {
-            intake.setPower(-1.0); // outtake
+            intake.setPower(-1.0); // Outtake
         } else {
-            intake.setPower(0); // Stop
+            intake.setPower(0);
         }
 
-        // v4Bar position control
+        // v4Bar control
         if (gamepad2.right_bumper) {
-            // Move v4Bar up (increase position)
-            v4BarPosition -= 0.006; // Adjust increment as needed
+            v4BarPosition -= 0.006;
         } else if (gamepad2.right_trigger > 0.1) {
-            // Move v4Bar down (decrease position)
-            v4BarPosition += 0.006; // Adjust decrement as needed
+            v4BarPosition += 0.006;
         }
-
-        // Clip the v4Bar position to the defined limits
         v4BarPosition = Range.clip(v4BarPosition, V4BAR_MIN_POSITION, V4BAR_MAX_POSITION);
         v4Bar.setPosition(v4BarPosition);
 
-        // Gamepad 2: Vertical slide control with PIDF (right joystick)
+        // Vertical slide control
         double joystickInput = -gamepad2.right_stick_y;
         if (Math.abs(joystickInput) > 0.05) {
             targetPosition += joystickInput * 20;
@@ -125,7 +166,6 @@ public class Teleop extends OpMode {
         int currentPosition = vertL.getCurrentPosition();
         double error = targetPosition - currentPosition;
 
-        // Prevent twitching when both positions are at zero
         if (targetPosition == 0 && currentPosition <= 20) {
             vertL.setPower(0);
             vertR.setPower(0);
@@ -133,21 +173,22 @@ public class Teleop extends OpMode {
             vertL.setPower(0);
             vertR.setPower(0);
         } else {
-            // Calculate motor power using PIDF
-            double dynamicKF = (error < 0) ? 0.05 : kF; // Lower kF when moving down
+            double dynamicKF = (error < 0) ? 0.05 : kF;
             double power = kP * error + dynamicKF;
-            power = Range.clip(power, MIN_DOWN_POWER, 1.0); // Limit power based on direction
+            power = Range.clip(power, MIN_DOWN_POWER, 1.0);
 
             vertL.setPower(power);
-            vertR.setPower(-power); // Reverse for opposite motor
+            vertR.setPower(-power);
         }
 
         // Telemetry for debugging
         telemetry.addData("Target Position", targetPosition);
         telemetry.addData("Current Position", currentPosition);
         telemetry.addData("Error", error);
-        telemetry.addData("Power L", vertL.getPower());
-        telemetry.addData("Power R", vertR.getPower());
+        telemetry.addData("Voltage", currentVoltage);
+        telemetry.addData("Total Degrees", totalDegrees);
+        telemetry.addData("Extend Limit", EXTEND_LIMIT_DEGREES);
+        telemetry.addData("Retract Limit", RETRACT_LIMIT_DEGREES);
         telemetry.update();
     }
 }
