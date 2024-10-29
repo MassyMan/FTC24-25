@@ -36,7 +36,7 @@ public class Teleop extends OpMode {
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
-    private static final double V4BAR_MAX_POSITION = 0.928;
+    private static final double V4BAR_MAX_POSITION = 0.988;
     private double v4BarPosition = 0.19;
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
@@ -139,11 +139,11 @@ public class Teleop extends OpMode {
 
         // Intake control
         if (gamepad2.left_bumper) {
-            intake.setPower(1.0); // Intake
-            intake2.setPower(-1.0); // Intake2 in the opposite direction
-        } else if (gamepad2.left_trigger > 0.1) {
-            intake.setPower(-1.0); // Outtake
+            intake.setPower(-1.0); // Intake
             intake2.setPower(1.0); // Intake2 in the opposite direction
+        } else if (gamepad2.left_trigger > 0.1) {
+            intake.setPower(1.0); // Outtake
+            intake2.setPower(-1.0); // Intake2 in the opposite direction
         } else {
             intake.setPower(0);
             intake2.setPower(0);
