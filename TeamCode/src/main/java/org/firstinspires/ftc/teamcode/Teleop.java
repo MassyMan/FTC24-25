@@ -16,9 +16,9 @@ public class Teleop extends OpMode {
     // CRServos for slide control
     private CRServo slidL, slidR;
 
-    // Servo and CRServo for intake and v4Bar control
+    // Servo and CRServos for intake and v4Bar control
     private Servo v4Bar;
-    private CRServo intake;
+    private CRServo intake, intake2;
 
     // Vertical slide motors
     private DcMotor vertL, vertR;
@@ -28,16 +28,17 @@ public class Teleop extends OpMode {
 
     // PIDF Controller variables
     private double kP = 0.003;
-    private double kF = 0.2;  // Reduce kF to prevent overshoot at the bottom
+    private double kF = 0.2;
     private double targetPosition = 0;
     private static final int MAX_TICKS = 3900;
     private static final double MIN_DOWN_POWER = -0.2;
-    private static final double ERROR_DEADBAND = 5;  // Error tolerance for stopping jitter
+    private static final double ERROR_DEADBAND = 5;
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
     private static final double V4BAR_MAX_POSITION = 0.928;
-    private double v4BarPosition = 0.19; // Start position for v4Bar
+    private double v4BarPosition = 0.19;
+    private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
     // Slide rotation tracking
     private double previousVoltage = 0;
@@ -45,7 +46,7 @@ public class Teleop extends OpMode {
 
     // Voltage range constants for the encoder (0-5V analog signal)
     private static final double VOLTAGE_MIN = 0.0;
-    private static final double VOLTAGE_MAX = 3.39; // Adjust based on actual encoder range
+    private static final double VOLTAGE_MAX = 3.39;
     private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
 
@@ -77,6 +78,7 @@ public class Teleop extends OpMode {
         // Initialize servos for v4Bar and intake
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
         intake = hardwareMap.get(CRServo.class, "intake");
+        intake2 = hardwareMap.get(CRServo.class, "intake2");
 
         // Initialize vertical slide motors
         vertL = hardwareMap.get(DcMotor.class, "vertL");
@@ -89,9 +91,6 @@ public class Teleop extends OpMode {
         // Initialize encoder and previous voltage
         axonR = hardwareMap.get(AnalogInput.class, "axonR");
         previousVoltage = axonR.getVoltage();
-
-        // Initialize v4Bar position
-        v4Bar.setPosition(v4BarPosition);
     }
 
     @Override
@@ -141,20 +140,28 @@ public class Teleop extends OpMode {
         // Intake control
         if (gamepad2.left_bumper) {
             intake.setPower(1.0); // Intake
+            intake2.setPower(-1.0); // Intake2 in the opposite direction
         } else if (gamepad2.left_trigger > 0.1) {
             intake.setPower(-1.0); // Outtake
+            intake2.setPower(1.0); // Intake2 in the opposite direction
         } else {
             intake.setPower(0);
+            intake2.setPower(0);
         }
 
-        // v4Bar control
+        // v4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
             v4BarPosition -= 0.006;
+            v4BarMoved = true;
         } else if (gamepad2.right_trigger > 0.1) {
             v4BarPosition += 0.006;
+            v4BarMoved = true;
         }
+
         v4BarPosition = Range.clip(v4BarPosition, V4BAR_MIN_POSITION, V4BAR_MAX_POSITION);
-        v4Bar.setPosition(v4BarPosition);
+        if (v4BarMoved) {
+            v4Bar.setPosition(v4BarPosition);
+        }
 
         // Vertical slide control
         double joystickInput = -gamepad2.right_stick_y;
