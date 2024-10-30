@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "Integrated Teleop with Slide Control", group = "TeleOp")
+@TeleOp(name = "Teleope", group = "TeleOp")
 public class Teleop extends OpMode {
     // Mecanum drive motors
     private DcMotor leftFront, leftBack, rightFront, rightBack;
@@ -23,12 +23,12 @@ public class Teleop extends OpMode {
     // Vertical slide motors
     private DcMotor vertL, vertR;
 
-    // Analog encoder for slidL
+    // Analog encoder for slidL [extendo]
     private AnalogInput axonR;
 
     // PIDF Controller variables
-    private double kP = 0.003;
-    private double kF = 0.2;
+    private double kP = 0.002;
+    private double kF = 0.1;
     private double targetPosition = 0;
     private static final int MAX_TICKS = 3900;
     private static final double MIN_DOWN_POWER = -0.2;
@@ -36,26 +36,26 @@ public class Teleop extends OpMode {
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
-    private static final double V4BAR_MAX_POSITION = 0.988;
-    private double v4BarPosition = 0.19;
+    private static final double V4BAR_MAX_POSITION = 0.968;
+    private double v4BarPosition = 0.5;
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
-    // Slide rotation tracking
+    // Slide rotation tracking [extendo]
     private double previousVoltage = 0;
     private int fullRotations = 0;
 
-    // Voltage range constants for the encoder (0-5V analog signal)
+    // Voltage range constants for the encoder (analog signal) [extendo]
     private static final double VOLTAGE_MIN = 0.0;
-    private static final double VOLTAGE_MAX = 3.39;
+    private static final double VOLTAGE_MAX = 3.4;
     private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
 
-    // Threshold for detecting wraparound
-    private static final double WRAPAROUND_THRESHOLD = 1.5;
+    // Threshold for detecting wraparound [extendo]
+    private static final double WRAPAROUND_THRESHOLD = 1.65;
 
-    // Limits for degrees
-    private static final double EXTEND_LIMIT_DEGREES = 860.0;
-    private static final double RETRACT_LIMIT_DEGREES = 160.0;
+    // Limits for degrees [extendo]
+    private static final double EXTEND_LIMIT_DEGREES = 850.0;
+    private static final double RETRACT_LIMIT_DEGREES = 255.0;
 
     @Override
     public void init() {
@@ -124,16 +124,21 @@ public class Teleop extends OpMode {
         double totalDegrees = (fullRotations * 360) + currentDegrees;
 
         // Reverse direction of left_stick_y for slide control
-        if (gamepad2.left_stick_y < 0 && totalDegrees < EXTEND_LIMIT_DEGREES) {
-            slidL.setPower(1.0);
-            slidR.setPower(-1.0);
-        } else if (gamepad2.left_stick_y > 0 && totalDegrees > RETRACT_LIMIT_DEGREES) {
-            slidL.setPower(-1.0);
-            slidR.setPower(1.0);
-        } else {
-            slidL.setPower(0);
-            slidR.setPower(0);
+        double slidePower = -gamepad2.left_stick_y;
+        double scaledPower = slidePower;
+
+        // Check if close to extend or retract limits and adjust power accordingly
+        if (slidePower > 0 && totalDegrees > (EXTEND_LIMIT_DEGREES - 100)) { // Approaching extend limit
+            double error = EXTEND_LIMIT_DEGREES - totalDegrees;
+            scaledPower = Range.clip(slidePower * (error / 100), 0.1, slidePower); // Slow down as error decreases
+        } else if (slidePower < 0 && totalDegrees < (RETRACT_LIMIT_DEGREES + 100)) { // Approaching retract limit
+            double error = totalDegrees - RETRACT_LIMIT_DEGREES;
+            scaledPower = Range.clip(slidePower * (error / 100), slidePower, -0.1); // Slow down as error decreases
         }
+
+        // Apply scaled power to the slides
+        slidL.setPower(scaledPower);
+        slidR.setPower(-scaledPower);
 
         previousVoltage = currentVoltage;
 
@@ -170,10 +175,11 @@ public class Teleop extends OpMode {
             targetPosition = Range.clip(targetPosition, 0, MAX_TICKS);
         }
 
+        // Get the current position of the vertical slide motor (vertL) and calculate error
         int currentPosition = vertL.getCurrentPosition();
         double error = targetPosition - currentPosition;
 
-        if (targetPosition == 0 && currentPosition <= 20) {
+        if (targetPosition == 0 && currentPosition <= 15) {
             vertL.setPower(0);
             vertR.setPower(0);
         } else if (Math.abs(error) < ERROR_DEADBAND) {
@@ -188,14 +194,11 @@ public class Teleop extends OpMode {
             vertR.setPower(-power);
         }
 
-        // Telemetry for debugging
-        telemetry.addData("Target Position", targetPosition);
-        telemetry.addData("Current Position", currentPosition);
-        telemetry.addData("Error", error);
-        telemetry.addData("Voltage", currentVoltage);
-        telemetry.addData("Total Degrees", totalDegrees);
-        telemetry.addData("Extend Limit", EXTEND_LIMIT_DEGREES);
-        telemetry.addData("Retract Limit", RETRACT_LIMIT_DEGREES);
+        // Telemetry
+        telemetry.addData("Degrees:", totalDegrees);
+        telemetry.addData("Current Voltage:", currentVoltage);
+        telemetry.addData("Vertical Target Position:", targetPosition);
+        telemetry.addData("Vertical Current Position:", currentPosition);
         telemetry.update();
     }
 }
