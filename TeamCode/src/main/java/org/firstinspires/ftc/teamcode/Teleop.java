@@ -28,16 +28,16 @@ public class Teleop extends OpMode {
 
     // PIDF Controller variables
     private double kP = 0.002;
-    private double kF = 0.1;
+    private double kF = 0.5;
     private double targetPosition = 0;
     private static final int MAX_TICKS = 3900;
-    private static final double MIN_DOWN_POWER = -0.2;
+    private static final double MIN_DOWN_POWER = -0.1;
     private static final double ERROR_DEADBAND = 5;
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
     private static final double V4BAR_MAX_POSITION = 0.968;
-    private double v4BarPosition = 0.5;
+    private double v4BarPosition = 0.8;
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
     // Slide rotation tracking [extendo]
@@ -109,11 +109,6 @@ public class Teleop extends OpMode {
         // Slide rotation and extension control with reversed joystick direction
         double currentVoltage = axonR.getVoltage();
         double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
-
-        if (gamepad2.dpad_down) {
-            fullRotations = 0;
-            previousVoltage = currentVoltage;
-        }
 
         if (currentVoltage < VOLTAGE_MIN + WRAPAROUND_THRESHOLD && previousVoltage > VOLTAGE_MAX - WRAPAROUND_THRESHOLD) {
             fullRotations++;
@@ -192,6 +187,9 @@ public class Teleop extends OpMode {
 
             vertL.setPower(power);
             vertR.setPower(-power);
+        }
+        if (gamepad2.dpad_down) {
+            targetPosition = 1600;
         }
 
         // Telemetry
