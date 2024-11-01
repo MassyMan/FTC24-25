@@ -133,7 +133,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(-10, -60, Math.toRadians(0));
+        Pose2d startPose = new Pose2d(-10, -60, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
         slideLift = new SlideLift(hardwareMap);
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
@@ -142,15 +142,32 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
-            Actions.runBlocking(new SequentialAction(
-                    new ParallelAction(
-                            drive.actionBuilder(startPose)
-                                    .strafeTo(new Vector2d(-10, -34))
-                                    .build(),
-                            new SlideLiftAction(slideLift, 1600)
-                    )
-                    // Add more actions here if necessary
-            ));
+            // Move the slides to the target position while strafing
+            ParallelAction moveAndStrafe = new ParallelAction(
+                    drive.actionBuilder(startPose)
+                            .strafeTo(new Vector2d(-10, -34))
+                            .build(),
+                    new SlideLiftAction(slideLift, 1600)
+            );
+
+            Actions.runBlocking(moveAndStrafe);
+
+            // Wait for 1 second
+            sleep(1000);
+
+            // Lower the slides back down to 0
+            slideLift.moveSlides(0);
+
+            // Continuous check until the slides reach the target position
+            while (opModeIsActive() && Math.abs(slideLift.vertL.getCurrentPosition()) > THRESHOLD) {
+                slideLift.moveSlides(0);
+                telemetry.addData("Current Position", slideLift.vertL.getCurrentPosition());
+                telemetry.addData("Target Position", 0);
+                telemetry.update();
+            }
+
+            // Stop the slides after reaching the target position
+            slideLift.stopSlides();
         }
     }
 }
