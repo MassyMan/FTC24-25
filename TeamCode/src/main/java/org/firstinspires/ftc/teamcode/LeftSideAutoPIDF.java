@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -26,8 +25,8 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     private CRServo intake;
 
     // PIDF control variables
-    public static double kP = 0.0023;
-    public static double kF = 0.32;
+    public static double kP = 0.004;
+    public static double kF = 0.35;
     public static final int THRESHOLD = 80;
     private static final int MAX_TICKS = 3950;
     private static final double HOLD_POWER = 0.05;
@@ -62,7 +61,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             vertR = hardwareMap.get(DcMotorEx.class, "vertR");
 
             vertL.setDirection(DcMotorSimple.Direction.FORWARD);
-            vertR.setDirection(DcMotorSimple.Direction.FORWARD);
+            vertR.setDirection(DcMotorSimple.Direction.REVERSE);
 
             vertL.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
             vertR.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -84,21 +83,13 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
             boolean isInThreshold = Math.abs(error) <= THRESHOLD;
             if (isInThreshold) {
-                power = HOLD_POWER;
-                vertL.setPower(power);
-                vertR.setPower(-power);
-            } else {
-                if (power < 0) {
-                    power = Range.clip(power, MIN_DOWN_POWER, 1.0);
-                }
-                vertL.setPower(power);
-                vertR.setPower(-power);
+                power = HOLD_POWER; // Hold power to maintain position
+            } else if (power < 0) {
+                power = Range.clip(power, MIN_DOWN_POWER, 1.0);
             }
 
-            if (targetPosition == 0 && currentPosition <= 50) {
-                vertL.setPower(0);
-                vertR.setPower(0);
-            }
+            vertL.setPower(power);
+            vertR.setPower(power);
 
             telemetry.addData("Target Position", targetPosition);
             telemetry.addData("Current Position", currentPosition);
@@ -110,6 +101,10 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         public void stopSlides() {
             vertL.setPower(0);
             vertR.setPower(0);
+        }
+
+        public boolean isAtTarget() {
+            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD;
         }
     }
 
@@ -125,9 +120,27 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         @Override
         public boolean run(TelemetryPacket packet) {
             slideLift.moveSlides(targetTicks);
-            int currentPosition = slideLift.vertL.getCurrentPosition();
-            double error = Math.abs(targetTicks - currentPosition);
-            return error > THRESHOLD;
+            return !slideLift.isAtTarget(); // Continue until the target is reached
+        }
+    }
+
+    public class WaitAction implements Action {
+        private final double seconds;
+        private final ElapsedTime timer = new ElapsedTime();
+
+        public WaitAction(double seconds) {
+            this.seconds = seconds;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            if (timer.seconds() >= seconds) {
+                return false; // Completed wait
+            } else {
+                telemetry.addData("Waiting", "%.2f seconds elapsed", timer.seconds());
+                telemetry.update();
+                return true; // Still waiting
+            }
         }
     }
 
@@ -145,29 +158,30 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             // Move the slides to the target position while strafing
             ParallelAction moveAndStrafe = new ParallelAction(
                     drive.actionBuilder(startPose)
-                            .strafeTo(new Vector2d(-10, -34))
+                            .strafeTo(new Vector2d(-10, -50))
                             .build(),
                     new SlideLiftAction(slideLift, 1600)
             );
 
             Actions.runBlocking(moveAndStrafe);
 
-            // Wait for 1 second
-            sleep(1000);
+            // Wait for 3 seconds, blocking all other actions
+            Actions.runBlocking(new WaitAction(3));
 
             // Lower the slides back down to 0
-            slideLift.moveSlides(0);
-
-            // Continuous check until the slides reach the target position
-            while (opModeIsActive() && Math.abs(slideLift.vertL.getCurrentPosition()) > THRESHOLD) {
-                slideLift.moveSlides(0);
-                telemetry.addData("Current Position", slideLift.vertL.getCurrentPosition());
-                telemetry.addData("Target Position", 0);
-                telemetry.update();
-            }
+            SlideLiftAction lowerSlides = new SlideLiftAction(slideLift, 0);
+            Actions.runBlocking(lowerSlides);
 
             // Stop the slides after reaching the target position
             slideLift.stopSlides();
+
+            // Stop the drivetrain
+            drive.stop(); // Call the stop method to stop the drivetrain
+
+            // Continue with other autonomous actions if needed
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-10, -50, Math.toRadians(90)))
+                    .strafeTo(new Vector2d(-45, -39))
+                    .build());
         }
     }
 }
