@@ -23,33 +23,15 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     private SlideLift slideLift;
     private Servo v4Bar;
     private CRServo intake;
+    private CRServo intake2;
 
     // PIDF control variables
-    public static double kP = 0.004;
-    public static double kF = 0.35;
+    public static double kP = 0.005;
+    public static double kF = 0.2;
     public static final int THRESHOLD = 80;
-    private static final int MAX_TICKS = 3950;
-    private static final double HOLD_POWER = 0.05;
-    private static final double MIN_DOWN_POWER = -0.1;
-
-    public class ParallelAction implements Action {
-        private Action[] actions;
-
-        public ParallelAction(Action... actions) {
-            this.actions = actions;
-        }
-
-        @Override
-        public boolean run(TelemetryPacket packet) {
-            boolean allComplete = true;
-            for (Action action : actions) {
-                if (action != null) {
-                    allComplete &= action.run(packet);
-                }
-            }
-            return !allComplete;
-        }
-    }
+    private static final int MAX_TICKS = 3900;
+    private static final double HOLD_POWER = 0.1;
+    private static final double MIN_DOWN_POWER = -0.2;
 
     public class SlideLift {
         private DcMotorEx vertL;
@@ -77,30 +59,42 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             int currentPosition = vertL.getCurrentPosition();
             double error = targetPosition - currentPosition;
 
-            double dynamicKF = (error < 0) ? 0.05 : kF;
-            double power = kP * error + dynamicKF;
-            power = Range.clip(power, -1.0, 1.0);
-
-            boolean isInThreshold = Math.abs(error) <= THRESHOLD;
-            if (isInThreshold) {
-                power = HOLD_POWER; // Hold power to maintain position
-            } else if (power < 0) {
-                power = Range.clip(power, MIN_DOWN_POWER, 1.0);
+            // Check if we are within the threshold
+            if (Math.abs(error) <= THRESHOLD) {
+                applyHoldPower(); // Maintain the current position with hold power
+                telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
+                return; // Exit the method, stopping further actions
             }
 
+            // Calculate power based on error
+            double power = kP * error + kF;
+            power = Range.clip(power, -1.0, 1.0);
+
+            // Prevent going below the minimum
+            if (power < 0 && currentPosition <= 0) {
+                power = 0; // Prevent going below the minimum
+            } else if (power < 0) {
+                power = Math.max(power, MIN_DOWN_POWER); // Ensure it goes down faster
+            }
+
+            // Set motor power
             vertL.setPower(power);
             vertR.setPower(power);
 
-            telemetry.addData("Target Position", targetPosition);
+            telemetry.addData("Slide Lift", "Target Position: %d", (int) targetPosition);
             telemetry.addData("Current Position", currentPosition);
             telemetry.addData("Error", error);
             telemetry.addData("Power Output", power);
+            telemetry.addData("Is At Target", isAtTarget());
             telemetry.update();
         }
 
-        public void stopSlides() {
-            vertL.setPower(0);
-            vertR.setPower(0);
+
+        public void applyHoldPower() {
+            vertL.setPower(HOLD_POWER);
+            vertR.setPower(HOLD_POWER);
+            telemetry.addData("Slide Lift", "Holding Power Applied: %.2f", HOLD_POWER);
+            telemetry.update();
         }
 
         public boolean isAtTarget() {
@@ -120,27 +114,25 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         @Override
         public boolean run(TelemetryPacket packet) {
             slideLift.moveSlides(targetTicks);
-            return !slideLift.isAtTarget(); // Continue until the target is reached
+            return !slideLift.isAtTarget();
         }
     }
 
-    public class WaitAction implements Action {
-        private final double seconds;
-        private final ElapsedTime timer = new ElapsedTime();
+    public class V4BarAction implements Action {
+        private Servo v4Bar;
+        private double position;
 
-        public WaitAction(double seconds) {
-            this.seconds = seconds;
+        public V4BarAction(Servo v4Bar, double position) {
+            this.v4Bar = v4Bar;
+            this.position = position;
         }
 
         @Override
         public boolean run(TelemetryPacket packet) {
-            if (timer.seconds() >= seconds) {
-                return false; // Completed wait
-            } else {
-                telemetry.addData("Waiting", "%.2f seconds elapsed", timer.seconds());
-                telemetry.update();
-                return true; // Still waiting
-            }
+            v4Bar.setPosition(position);
+            telemetry.addData("V4Bar", "Moving to Position: %.2f", position);
+            telemetry.update();
+            return false; // Returning false to indicate the action is instantaneous.
         }
     }
 
@@ -151,36 +143,29 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         slideLift = new SlideLift(hardwareMap);
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
         intake = hardwareMap.get(CRServo.class, "intake");
+        intake2 = hardwareMap.get(CRServo.class, "intake2");
 
         waitForStart();
 
         if (opModeIsActive()) {
-            // Move the slides to the target position while strafing
-            ParallelAction moveAndStrafe = new ParallelAction(
-                    drive.actionBuilder(startPose)
-                            .strafeTo(new Vector2d(-10, -50))
-                            .build(),
-                    new SlideLiftAction(slideLift, 1600)
-            );
+            SlideLiftAction liftAction = new SlideLiftAction(slideLift, 1700);
+            V4BarAction v4BarAction = new V4BarAction(v4Bar, 0.6); // Set to desired position
 
-            Actions.runBlocking(moveAndStrafe);
+            // TODO: Intake while lowering slides from 1600 -> 0 to hang specimen on bar, 11/3 deadline for POC hang
 
-            // Wait for 3 seconds, blocking all other actions
-            Actions.runBlocking(new WaitAction(3));
+            Actions.runBlocking(drive.actionBuilder(startPose)
+                    .afterDisp(0, liftAction)
+                    .afterDisp(0, new V4BarAction(v4Bar, 0.5)) // Move the v4Bar after lifting
+                    .strafeTo(new Vector2d(-10, -37))
+                    .waitSeconds(2)
+                    .build());
 
-            // Lower the slides back down to 0
-            SlideLiftAction lowerSlides = new SlideLiftAction(slideLift, 0);
-            Actions.runBlocking(lowerSlides);
-
-            // Stop the slides after reaching the target position
-            slideLift.stopSlides();
-
-            // Stop the drivetrain
-            drive.stop(); // Call the stop method to stop the drivetrain
-
-            // Continue with other autonomous actions if needed
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-10, -50, Math.toRadians(90)))
-                    .strafeTo(new Vector2d(-45, -39))
+            SlideLiftAction lowerAction = new SlideLiftAction(slideLift, 150);
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-10, -37, Math.toRadians(90)))
+                    .afterDisp(0, lowerAction)
+                    .afterDisp(10, new V4BarAction(v4Bar, 0.94))
+                    .strafeTo(new Vector2d(-10, -45))
+                    .strafeTo(new Vector2d(-50, -45))
                     .build());
         }
     }
