@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -16,8 +15,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import java.util.Vector;
 
 @Config
 @Autonomous(name = "[LEFT] Bucket 4+0", group = "Autonomous")
@@ -34,7 +31,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     public static final int THRESHOLD = 80;
     private static final int MAX_TICKS = 3900;
     private static final double HOLD_POWER = 0.1;
-    private static final double MIN_DOWN_POWER = -0.8;
+    private static final double MIN_DOWN_POWER = -0.90;
 
     public class SlideLift {
         private DcMotorEx vertL;
@@ -61,16 +58,17 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             targetPosition = Range.clip(targetTicks, 0, MAX_TICKS);
             int currentPosition = vertL.getCurrentPosition();
             double error = targetPosition - currentPosition;
+            double power = kP * error + kF;
+            power = Range.clip(power, MIN_DOWN_POWER, 1.0);
 
-            // Check if within the threshold
-            if ((Math.abs(error) <= THRESHOLD + 30) && targetPosition != 0) {
-                vertL.setPower(HOLD_POWER);
-                vertR.setPower(HOLD_POWER);
-                telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
-                telemetry.addData("Slide Lift", "Holding Power Applied: %.2f", HOLD_POWER);
-                telemetry.update();
-                return;
-            } else if ((targetPosition == 0) && currentPosition <= THRESHOLD){
+            if (power < 0) {
+                power = Math.max(power, MIN_DOWN_POWER);
+            }
+
+
+
+            // If the target position is zero and slides are below 100 ticks, stop the motors
+            if ((currentPosition <= 150) && (power < 0) && targetPosition <= 100) {
                 vertL.setPower(0);
                 vertR.setPower(0);
                 telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
@@ -78,20 +76,22 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                 return;
             }
 
-            // Calculate power based on error
-            double power = kP * error + kF;
-            power = Range.clip(power, -1.0, 1.0);
-
-            // Limit downward speed
-            if (power < 0 && currentPosition <= 50) {
-                power = 0;
-            } else if (power < 0) {
-                power = Math.max(power, MIN_DOWN_POWER);
-            }
-
             // Set motor power
             vertL.setPower(power);
             vertR.setPower(power);
+
+            // Check if within the threshold for holding power at non-zero targets
+            if (Math.abs(error) <= THRESHOLD + 50 && targetPosition != 0) {
+                vertL.setPower(HOLD_POWER);
+                vertR.setPower(HOLD_POWER);
+                telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
+                telemetry.update();
+                return;
+            }
+
+
+
+
 
             telemetry.addData("Slide Lift", "Target Position: %d", (int) targetPosition);
             telemetry.addData("Current Position", currentPosition);
@@ -101,8 +101,9 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             telemetry.update();
         }
 
+
         public boolean isAtTarget() {
-            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD+10; // +10 to fix jittering back out glitch
+            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD + 30; // +10 to fix back out glitch
         }
     }
 
@@ -149,7 +150,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         private double power;
         private double duration;
         private ElapsedTime timer;
-        private boolean timerStarted = false;
+        private boolean timerStarted = false; // Flag to track if the timer has started
 
         public IntakeSpinAction(CRServo intake, CRServo intake2, double power, double duration) {
             this.intake = intake;
@@ -157,15 +158,18 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             this.power = power;
             this.duration = duration;
             this.timer = new ElapsedTime();
+            timerStarted = false;
         }
 
         @Override
         public boolean run(TelemetryPacket packet) {
+            // Only reset the timer once, at the start of the action
             if (!timerStarted) {
                 timer.reset();
                 timerStarted = true;
             }
 
+            // Run the intake while the elapsed time is less than the specified duration
             if (timer.seconds() < duration) {
                 intake.setPower(power);
                 intake2.setPower(-power);
@@ -173,52 +177,118 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                 telemetry.update();
                 return true;
             } else {
+                // Stop the intake and mark the action as complete
                 intake.setPower(0);
                 intake2.setPower(0);
                 telemetry.addData("Intake", "Stopped after duration: %.2f seconds", duration);
                 telemetry.update();
+                timerStarted = false;
+                timer.reset();
                 return false;
             }
         }
     }
 
+
+
     @Override
     public void runOpMode() {
+
         Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(180));
+        Pose2d firstGround = new Pose2d(-47, -42, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
+
         slideLift = new SlideLift(hardwareMap);
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
         intake = hardwareMap.get(CRServo.class, "intake");
         intake2 = hardwareMap.get(CRServo.class, "intake2");
 
         waitForStart();
-
         if (opModeIsActive()) {
-            // Start raising slides while strafing
-            SlideLiftAction raiseSlides = new SlideLiftAction(slideLift, 3800);
+            // ACTIONS FOR AUTO
+            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3850);
+            SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
+
+            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
+            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 2);
+
+            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.3);
+            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.9);
+
+
+            // SEQUENCE FOR DRIVING FROM STARTING POSITION TO BUCKET WHILE RAISING SLIDES
             Actions.runBlocking(drive.actionBuilder(startPose)
-                    .afterTime(0, raiseSlides)
-                    .afterTime(0, new V4BarAction(v4Bar, 0.3))
-                    .strafeToSplineHeading(new Vector2d(-58, -50), Math.toRadians(225))
+                    .afterTime(0, slidesDeposit) // RAISE SLIDES ACTION FOR HIGH BUCKET
+                    .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
+                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225)) // BUCKET POSITION
                     .build());
 
-            // Check if slides are within the target position
-            while (opModeIsActive() && !raiseSlides.slideLift.isAtTarget()) {
-                // Update telemetry or perform other actions if needed
-                telemetry.addData("Raising Slides", "Current Position: %d", slideLift.vertL.getCurrentPosition());
-                telemetry.update();
-                idle(); // Prevent CPU overuse
-            }
+            // INTAKE: 0.5 = outtake, -1.0 = intake
 
-            // Now run the actions for intake, v4Bar, and moving slides back down
-            Actions.runBlocking(drive.actionBuilder(startPose)
-                    .afterTime(0, new IntakeSpinAction(intake, intake2, 0.8, 0.5))
-                    .afterTime(0.8, new V4BarAction(v4Bar, 0.25)) // Slight delay after intake
-                    .afterTime(0, new SlideLiftAction(slideLift, 0)) // Lower slides to 0
-                    .setReversed(true)
-                    .strafeToLinearHeading(new Vector2d(-50, -42), Math.toRadians(180))
+            // SEQUENCE FOR OUTTAKING PRELOAD, LOWERING SLIDES, DRIVING TO FIRST GROUND
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                    .afterTime(0, outtakeSample)   // OUTTAKE
+                    .afterTime(0.5, slidesGround)
+                    .afterTime(2, V4BarGround)
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                            .strafeToLinearHeading(new Vector2d(-48, -42), Math.toRadians(90))
+                            .build())
                     .build());
+
+            // SEQUENCE FOR INTAKING FIRST GROUND
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-48, -42, Math.toRadians(90)))
+                    .afterTime(0, intakeSample)
+                    .afterTime(0, drive.actionBuilder(new Pose2d(-48, -42, Math.toRadians(90)))
+                            .strafeTo(new Vector2d(-48, -28))
+                            .build())
+                    .build());
+
+            // SEQUENCE FOR DRIVING TO BUCKET, DEPOSITING FIRST GROUND
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-48, -28, Math.toRadians(90)))
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(0.5, slidesDeposit)
+                    .strafeTo(new Vector2d(-48, -32))
+                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225))
+                    .build());
+
+            // SEQUENCE FOR DEPOSITING FIRST GROUND, DRIVING TO SECOND GROUND
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                    .afterTime(0, outtakeSample)   // OUTTAKE
+                    .afterTime(0.5, slidesGround)
+                    .afterTime(2, V4BarGround)
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                            .strafeToLinearHeading(new Vector2d(-58, -42), Math.toRadians(90))
+                            .build())
+                    .build());
+
+            // SEQUENCE FOR INTAKING SECOND GROUND
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -42, Math.toRadians(90)))
+                    .afterTime(0, intakeSample)
+                    .afterTime(0, drive.actionBuilder(new Pose2d(-58, -42, Math.toRadians(90)))
+                            .strafeTo(new Vector2d(-58, -28))
+                            .build())
+                    .build());
+
+            // SEQUENCE FOR DRIVING TO BUCKET, DEPOSITING SECOND GROUND
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -28, Math.toRadians(90)))
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(0.5, slidesDeposit)
+                    .strafeTo(new Vector2d(-58, -32))
+                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225))
+
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                    .afterTime(0, outtakeSample)   // OUTTAKE
+                    .afterTime(0.5, slidesGround)
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                            .strafeToLinearHeading(new Vector2d(-58, -26), Math.toRadians(180))
+                            .build())
+                    .build());
+
+
         }
     }
+
 
 }
