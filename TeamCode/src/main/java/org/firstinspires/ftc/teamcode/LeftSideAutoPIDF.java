@@ -17,7 +17,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@Autonomous(name = "LEFT SIDE AUTO", group = "Autonomous")
+@Autonomous(name = "[LEFT] Bucket 4+0", group = "Autonomous")
 public class LeftSideAutoPIDF extends LinearOpMode {
 
     private SlideLift slideLift;
@@ -60,19 +60,27 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             double error = targetPosition - currentPosition;
 
             // Check if we are within the threshold
-            if (Math.abs(error) <= THRESHOLD) {
-                applyHoldPower(); // Maintain the current position with hold power
+            if (Math.abs(error) <= THRESHOLD + 30) {
+                vertL.setPower(0.1);
+                vertR.setPower(0.1);// Maintain the current position with hold power
                 telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
+                telemetry.addData("Slide Lift", "Holding Power Applied: %.2f", HOLD_POWER);
+                telemetry.update();
                 return; // Exit the method, stopping further actions
             }
+
 
             // Calculate power based on error
             double power = kP * error + kF;
             power = Range.clip(power, -1.0, 1.0);
 
             // Prevent going below the minimum
-            if (power < 0 && currentPosition <= 0) {
+            if (power < 0 && currentPosition <= 50) {
                 power = 0; // Prevent going below the minimum
+
+                vertL.setPower(power);
+                vertR.setPower(power);
+
             } else if (power < 0) {
                 power = Math.max(power, MIN_DOWN_POWER); // Ensure it goes down faster
             }
@@ -88,15 +96,14 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             telemetry.addData("Is At Target", isAtTarget());
             telemetry.update();
         }
-
-
+/*
         public void applyHoldPower() {
             vertL.setPower(HOLD_POWER);
             vertR.setPower(HOLD_POWER);
             telemetry.addData("Slide Lift", "Holding Power Applied: %.2f", HOLD_POWER);
             telemetry.update();
         }
-
+*/
         public boolean isAtTarget() {
             return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD;
         }
@@ -108,15 +115,21 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
         public SlideLiftAction(SlideLift slideLift, double targetTicks) {
             this.slideLift = slideLift;
-            this.targetTicks = targetTicks;
+            this.targetTicks = Range.clip(targetTicks, 0, MAX_TICKS); // Ensure targetTicks is clipped
         }
 
         @Override
         public boolean run(TelemetryPacket packet) {
             slideLift.moveSlides(targetTicks);
-            return !slideLift.isAtTarget();
+
+            // Return false if within the threshold to indicate action is done
+            boolean isAtTarget = slideLift.isAtTarget();
+            telemetry.addData("SlideLiftAction", "At Target: %b, Target Ticks: %.2f", isAtTarget, targetTicks);
+            telemetry.update();
+            return !isAtTarget;
         }
     }
+
 
     public class V4BarAction implements Action {
         private Servo v4Bar;
@@ -136,9 +149,42 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         }
     }
 
+    public class IntakeSpinAction implements Action {
+        private CRServo intake;
+        private CRServo intake2;
+        private double power;
+        private double duration;
+        private ElapsedTime timer;
+
+        public IntakeSpinAction(CRServo intake, CRServo intake2, double power, double duration) {
+            this.intake = intake;
+            this.intake2 = intake2;
+            this.power = power;
+            this.duration = duration;
+            this.timer = new ElapsedTime();
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            if (timer.seconds() < duration) {
+                intake.setPower(power);
+                intake2.setPower(-power); // Opposite direction
+                telemetry.addData("Intake", "Running at power: %.2f for %.2f seconds", power, duration);
+                telemetry.update();
+                return true; // Action still running
+            } else {
+                intake.setPower(0);
+                intake2.setPower(0);
+                telemetry.addData("Intake", "Stopped after duration: %.2f seconds", duration);
+                telemetry.update();
+                return false; // Action completed
+            }
+        }
+    }
+
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(-10, -60, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
         slideLift = new SlideLift(hardwareMap);
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
@@ -148,25 +194,27 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
-            SlideLiftAction liftAction = new SlideLiftAction(slideLift, 1700);
-            V4BarAction v4BarAction = new V4BarAction(v4Bar, 0.6); // Set to desired position
-
-            // TODO: Intake while lowering slides from 1600 -> 0 to hang specimen on bar, 11/3 deadline for POC hang
 
             Actions.runBlocking(drive.actionBuilder(startPose)
-                    .afterDisp(0, liftAction)
-                    .afterDisp(0, new V4BarAction(v4Bar, 0.5)) // Move the v4Bar after lifting
-                    .strafeTo(new Vector2d(-10, -37))
-                    .waitSeconds(2)
+                    .afterDisp(0, new SlideLiftAction(slideLift, 3800))
+                    .afterDisp(10, new V4BarAction(v4Bar, 0.3))
+                    .strafeToSplineHeading(new Vector2d(-52, -52), (Math.toRadians(225)))
+                  /*.afterTime(5, new IntakeSpinAction(intake, intake2, 0.8, 3))
+                    .afterTime(5, new V4BarAction(v4Bar, 0.22))
+                    .afterTime(5, new SlideLiftAction(slideLift, 0))
                     .build());
 
-            SlideLiftAction lowerAction = new SlideLiftAction(slideLift, 150);
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-10, -37, Math.toRadians(90)))
-                    .afterDisp(0, lowerAction)
-                    .afterDisp(10, new V4BarAction(v4Bar, 0.94))
+                   */
+/* OLD SPECIMEN HANGING CODE
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-10, -33, Math.toRadians(90)))
+                    .afterDisp(0, new SlideLiftAction(slideLift, 0))
+                    .afterDisp(0, new IntakeSpinAction(intake, intake2, -0.1, 2))
+                    .afterDisp(20, new V4BarAction(v4Bar, 0.94))
                     .strafeTo(new Vector2d(-10, -45))
-                    .strafeTo(new Vector2d(-50, -45))
+                    .strafeTo(new Vector2d(-51, -45))
                     .build());
+
+ */
         }
     }
 }
