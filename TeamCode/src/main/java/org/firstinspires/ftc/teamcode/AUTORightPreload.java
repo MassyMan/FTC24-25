@@ -17,8 +17,8 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@Autonomous(name = "[LEFT] Bucket 4+0", group = "Autonomous")
-public class LeftSideAutoPIDF extends LinearOpMode {
+@Autonomous(name = "RIGHT PRELOAD + PARK", group = "Autonomous")
+public class AUTORightPreload extends LinearOpMode {
 
     private SlideLift slideLift;
     private Servo v4Bar;
@@ -194,8 +194,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(180));
-        Pose2d firstGround = new Pose2d(-47, -42, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(11, -60, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -210,7 +209,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
             IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
-            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 2);
+            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 1);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.3);
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.9);
@@ -290,14 +289,19 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
             Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -23, Math.toRadians(180)))
                     .afterTime(0, intakeSample)
-                    .afterTime(1, V4BarDeposit)
-                    .afterTime(2, slidesDeposit)
-                    .strafeTo(new Vector2d(-58, -23))
+                    .afterTime(2, V4BarDeposit)
+                    .afterTime(2.8, slidesDeposit)
+                    .strafeTo(new Vector2d(-57, -23))
                     .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
                     .build());
 
             Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)
+                    .afterTime(0.5, slidesGround)
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+                            .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0))
+                            .strafeTo(new Vector2d(-28, -6))
+                            .build())
                     .build());
 
         }

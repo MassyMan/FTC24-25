@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "Teleope", group = "TeleOp")
+@TeleOp(name = "TELEOP", group = "TeleOp")
 public class Teleop extends OpMode {
     // Mecanum drive motors
     private DcMotor leftFront, leftBack, rightFront, rightBack;
@@ -26,18 +26,13 @@ public class Teleop extends OpMode {
     // Analog encoder for slidL [extendo]
     private AnalogInput axonR;
 
-    // PIDF Controller variables
-    private double kP = 0.002;
-    private double kF = 0.5;
-    private double targetPosition = 0;
     private static final int MAX_TICKS = 3900;
-    private static final double MIN_DOWN_POWER = -0.1;
-    private static final double ERROR_DEADBAND = 5;
+    private static final double HOLD_POWER = 0.1;
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
-    private static final double V4BAR_MAX_POSITION = 0.968;
-    private double v4BarPosition = 0.8;
+    private static final double V4BAR_MAX_POSITION = 0.928;
+    private double v4BarPosition = 0.25;
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
     // Slide rotation tracking [extendo]
@@ -163,40 +158,34 @@ public class Teleop extends OpMode {
             v4Bar.setPosition(v4BarPosition);
         }
 
-        // Vertical slide control
-        double joystickInput = -gamepad2.right_stick_y;
-        if (Math.abs(joystickInput) > 0.05) {
-            targetPosition += joystickInput * 20;
-            targetPosition = Range.clip(targetPosition, 0, MAX_TICKS);
-        }
-
-        // Get the current position of the vertical slide motor (vertL) and calculate error
+// Get the current position of the vertical slide motor (vertL)
         int currentPosition = vertL.getCurrentPosition();
-        double error = targetPosition - currentPosition;
 
-        if (targetPosition == 0 && currentPosition <= 15) {
+// Slide Control
+
+        if ((Math.abs(gamepad2.right_stick_y) > 0.1) && currentPosition < MAX_TICKS){
+            vertL.setPower(gamepad2.right_stick_y);
+            vertR.setPower(-gamepad2.right_stick_y);
+
+        } else if (Math.abs(gamepad2.right_stick_y) < 0.1 && currentPosition > 50) {
+            vertL.setPower(HOLD_POWER);
+            vertR.setPower(-HOLD_POWER);
+
+        } else if (currentPosition <= 50) {
             vertL.setPower(0);
             vertR.setPower(0);
-        } else if (Math.abs(error) < ERROR_DEADBAND) {
-            vertL.setPower(0);
-            vertR.setPower(0);
-        } else {
-            double dynamicKF = (error < 0) ? 0.05 : kF;
-            double power = kP * error + dynamicKF;
-            power = Range.clip(power, MIN_DOWN_POWER, 1.0);
 
-            vertL.setPower(power);
-            vertR.setPower(-power);
-        }
-        if (gamepad2.dpad_down) {
-            targetPosition = 1600;
+        } else if (currentPosition >= MAX_TICKS){
+            vertL.setPower(HOLD_POWER);
+            vertR.setPower(-HOLD_POWER);
         }
 
         // Telemetry
         telemetry.addData("Degrees:", totalDegrees);
         telemetry.addData("Current Voltage:", currentVoltage);
-        telemetry.addData("Vertical Target Position:", targetPosition);
         telemetry.addData("Vertical Current Position:", currentPosition);
+        telemetry.addData("ee", "SKIBIDI");
+        telemetry.addData("ALL SYSTEMS SKIBIDI", "ALL SYSTEMS SKIBIDI");
         telemetry.update();
     }
 }
