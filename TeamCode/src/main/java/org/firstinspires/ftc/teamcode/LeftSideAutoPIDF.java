@@ -278,14 +278,27 @@ public class LeftSideAutoPIDF extends LinearOpMode {
 
                     .build());
 
+            // DEPOSIT SECOND GROUND, DRIVE TO THIRD GROUND
             Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.5, slidesGround)
+                    .afterTime(2, V4BarGround)
                     .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-58, -26), Math.toRadians(180))
+                            .strafeToLinearHeading(new Vector2d(-50, -26), Math.toRadians(180))
                             .build())
                     .build());
 
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -26, Math.toRadians(180)))
+                    .afterTime(0, intakeSample)
+                    .afterTime(2, V4BarDeposit)
+                    .afterTime(2, slidesDeposit)
+                    .strafeTo(new Vector2d(-62, -26))
+                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225))
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                    .afterTime(0, outtakeSample)
+                    .build());
 
         }
     }
