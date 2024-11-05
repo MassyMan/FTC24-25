@@ -206,7 +206,7 @@ public class LeftSideAutoPIDF extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             // ACTIONS FOR AUTO
-            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3850);
+            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3890);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
             IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
@@ -220,17 +220,17 @@ public class LeftSideAutoPIDF extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesDeposit) // RAISE SLIDES ACTION FOR HIGH BUCKET
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225)) // BUCKET POSITION
+                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225)) // BUCKET POSITION
                     .build());
 
             // INTAKE: 0.5 = outtake, -1.0 = intake
 
             // SEQUENCE FOR OUTTAKING PRELOAD, LOWERING SLIDES, DRIVING TO FIRST GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.5, slidesGround)
                     .afterTime(2, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                             .strafeToLinearHeading(new Vector2d(-48, -42), Math.toRadians(90))
                             .build())
                     .build());
@@ -248,15 +248,15 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                     .afterTime(0, V4BarDeposit)
                     .afterTime(0.5, slidesDeposit)
                     .strafeTo(new Vector2d(-48, -32))
-                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225))
+                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
                     .build());
 
             // SEQUENCE FOR DEPOSITING FIRST GROUND, DRIVING TO SECOND GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.5, slidesGround)
                     .afterTime(2, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
                             .strafeToLinearHeading(new Vector2d(-58, -42), Math.toRadians(90))
                             .build())
                     .build());
@@ -274,29 +274,29 @@ public class LeftSideAutoPIDF extends LinearOpMode {
                     .afterTime(0, V4BarDeposit)
                     .afterTime(0.5, slidesDeposit)
                     .strafeTo(new Vector2d(-58, -32))
-                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225))
+                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
 
                     .build());
 
             // DEPOSIT SECOND GROUND, DRIVE TO THIRD GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.5, slidesGround)
                     .afterTime(2, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-50, -26), Math.toRadians(180))
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+                            .strafeToLinearHeading(new Vector2d(-50, -23), Math.toRadians(180))
                             .build())
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -26, Math.toRadians(180)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -23, Math.toRadians(180)))
                     .afterTime(0, intakeSample)
-                    .afterTime(2, V4BarDeposit)
+                    .afterTime(1, V4BarDeposit)
                     .afterTime(2, slidesDeposit)
-                    .strafeTo(new Vector2d(-62, -26))
-                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(225))
+                    .strafeTo(new Vector2d(-58, -23))
+                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)
                     .build());
 
