@@ -26,7 +26,7 @@ public class Teleop extends OpMode {
     // Analog encoder for slidL [extendo]
     private AnalogInput axonR;
 
-    private static final int MAX_TICKS = 3900;
+    private static final int MAX_TICKS = 3800;
     private static final double HOLD_POWER = 0.1;
 
     // V4Bar position limits
@@ -163,29 +163,41 @@ public class Teleop extends OpMode {
 
 // Slide Control
 
-        if ((Math.abs(gamepad2.right_stick_y) > 0.1) && currentPosition < MAX_TICKS){
-            vertL.setPower(gamepad2.right_stick_y);
-            vertR.setPower(-gamepad2.right_stick_y);
-
-        } else if (Math.abs(gamepad2.right_stick_y) < 0.1 && currentPosition > 50) {
+        if (Math.abs(gamepad2.right_stick_y) > 0.1) {
+            if (currentPosition < 100 && gamepad2.right_stick_y > 0.1) {
+                // Prevent moving further down if already near the bottom
+                vertL.setPower(0);
+                vertR.setPower(0);
+            } else if (currentPosition >= MAX_TICKS && gamepad2.right_stick_y < -0.1) {
+                // Prevent moving further up if already at the maximum
+                vertL.setPower(HOLD_POWER);
+                vertR.setPower(-HOLD_POWER);
+            } else {
+                // Allow free movement up or down within the range
+                vertL.setPower(-gamepad2.right_stick_y);
+                vertR.setPower(gamepad2.right_stick_y);
+            }
+        } else if (currentPosition > 100 && currentPosition < MAX_TICKS) {
+            // Hold position if no input and within the range
             vertL.setPower(HOLD_POWER);
             vertR.setPower(-HOLD_POWER);
-
-        } else if (currentPosition <= 50) {
+        } else if (currentPosition >= MAX_TICKS && gamepad2.right_stick_y > 0.1) {
+            // Allow moving down if at max position and joystick is pulling down
+            vertL.setPower(-gamepad2.right_stick_y);
+            vertR.setPower(gamepad2.right_stick_y);
+        } else {
+            // Stop the motors if no other condition applies
             vertL.setPower(0);
             vertR.setPower(0);
-
-        } else if (currentPosition >= MAX_TICKS){
-            vertL.setPower(HOLD_POWER);
-            vertR.setPower(-HOLD_POWER);
         }
+
 
         // Telemetry
         telemetry.addData("Degrees:", totalDegrees);
         telemetry.addData("Current Voltage:", currentVoltage);
         telemetry.addData("Vertical Current Position:", currentPosition);
         telemetry.addData("ee", "SKIBIDI");
-        telemetry.addData("ALL SYSTEMS SKIBIDI", "ALL SYSTEMS SKIBIDI");
+        telemetry.addData("ALL SYSTEMS SKIBIDI", gamepad2.right_stick_y);
         telemetry.update();
     }
 }

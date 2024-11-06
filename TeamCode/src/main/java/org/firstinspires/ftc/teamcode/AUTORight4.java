@@ -102,6 +102,7 @@ public class AUTORight4 extends LinearOpMode {
         }
 
 
+
         public boolean isAtTarget() {
             return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD + 30; // +10 to fix back out glitch
         }
@@ -194,7 +195,7 @@ public class AUTORight4 extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        Pose2d startPose = new Pose2d(11, -60, Math.toRadians(180));
+        Pose2d startPose = new Pose2d(11, -60, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -205,100 +206,43 @@ public class AUTORight4 extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             // ACTIONS FOR AUTO
-            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3890);
+            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1690);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
             IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
-            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 2);
+            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -0.1, 0.5);
 
-            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.3);
-            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.9);
+            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.37);
+            V4BarAction V4BarRetract = new V4BarAction(v4Bar, 0.22);
 
 
-            // SEQUENCE FOR DRIVING FROM STARTING POSITION TO BUCKET WHILE RAISING SLIDES
+            // SEQUENCE FOR DRIVING FROM STARTING POSITION TO SUBMERSIBLE WHILE RAISING SLIDES
             Actions.runBlocking(drive.actionBuilder(startPose)
-                    .afterTime(0, slidesDeposit) // RAISE SLIDES ACTION FOR HIGH BUCKET
+                    .afterTime(0, slidesSpecimen) // RAISE SLIDES ACTION FOR HIGH CHAMBER
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225)) // BUCKET POSITION
+                    .strafeTo(new Vector2d(0, -33))
                     .build());
 
-            // INTAKE: 0.5 = outtake, -1.0 = intake
-
-            // SEQUENCE FOR OUTTAKING PRELOAD, LOWERING SLIDES, DRIVING TO FIRST GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                    .afterTime(0, outtakeSample)   // OUTTAKE
-                    .afterTime(0.5, slidesGround)
-                    .afterTime(2, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-48, -42), Math.toRadians(90))
-                            .build())
-                    .build());
-
-            // SEQUENCE FOR INTAKING FIRST GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-48, -42, Math.toRadians(90)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
+                    .afterTime(0, new SlideLiftAction(slideLift, 0))
+                    .afterTime(1, V4BarRetract)
                     .afterTime(0, intakeSample)
-                    .afterTime(0, drive.actionBuilder(new Pose2d(-48, -42, Math.toRadians(90)))
-                            .strafeTo(new Vector2d(-48, -28))
+                    .afterTime(3, outtakeSample) // Failsafe outtake, in case specimen did not release
+                    .afterTime(1, drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
+                            .strafeTo(new Vector2d(37, -50))
+                            .strafeTo(new Vector2d(37, -10))
+                            .strafeTo(new Vector2d(48, -10))
+                            .strafeTo(new Vector2d(48, -50))
+
+                            .strafeTo(new Vector2d(48, -10))
+                            .strafeTo(new Vector2d(58, -10))
+                            .strafeTo(new Vector2d(58, -50))
+
+                            .strafeTo(new Vector2d(58, -10))
+                            .strafeTo(new Vector2d(63, -10))
+                            .strafeTo(new Vector2d(63, -50))
                             .build())
                     .build());
-
-            // SEQUENCE FOR DRIVING TO BUCKET, DEPOSITING FIRST GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-48, -28, Math.toRadians(90)))
-                    .afterTime(0, V4BarDeposit)
-                    .afterTime(0.5, slidesDeposit)
-                    .strafeTo(new Vector2d(-48, -32))
-                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
-                    .build());
-
-            // SEQUENCE FOR DEPOSITING FIRST GROUND, DRIVING TO SECOND GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                    .afterTime(0, outtakeSample)   // OUTTAKE
-                    .afterTime(0.5, slidesGround)
-                    .afterTime(2, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-58, -42), Math.toRadians(90))
-                            .build())
-                    .build());
-
-            // SEQUENCE FOR INTAKING SECOND GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -42, Math.toRadians(90)))
-                    .afterTime(0, intakeSample)
-                    .afterTime(0, drive.actionBuilder(new Pose2d(-58, -42, Math.toRadians(90)))
-                            .strafeTo(new Vector2d(-58, -28))
-                            .build())
-                    .build());
-
-            // SEQUENCE FOR DRIVING TO BUCKET, DEPOSITING SECOND GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -28, Math.toRadians(90)))
-                    .afterTime(0, V4BarDeposit)
-                    .afterTime(0.5, slidesDeposit)
-                    .strafeTo(new Vector2d(-58, -32))
-                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
-
-                    .build());
-
-            // DEPOSIT SECOND GROUND, DRIVE TO THIRD GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                    .afterTime(0, outtakeSample)   // OUTTAKE
-                    .afterTime(0.5, slidesGround)
-                    .afterTime(2, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-50, -23), Math.toRadians(180))
-                            .build())
-                    .build());
-
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -23, Math.toRadians(180)))
-                    .afterTime(0, intakeSample)
-                    .afterTime(1, V4BarDeposit)
-                    .afterTime(2, slidesDeposit)
-                    .strafeTo(new Vector2d(-58, -23))
-                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
-                    .build());
-
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                    .afterTime(0, outtakeSample)
-                    .build());
-
         }
     }
 
