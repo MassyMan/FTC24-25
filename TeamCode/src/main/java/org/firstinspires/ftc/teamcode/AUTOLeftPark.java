@@ -194,7 +194,7 @@ public class AUTOLeftPark extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -217,7 +217,8 @@ public class AUTOLeftPark extends LinearOpMode {
 
             // SEQUENCE FOR DRIVING TO PARK NEXT TO SUBMERSIBLE
             Actions.runBlocking(drive.actionBuilder(startPose)
-                    .strafeToLinearHeading(new Vector2d(-40, -10), Math.toRadians(0))
+                    .strafeToLinearHeading(new Vector2d(-45, -6), Math.toRadians(0))
+                    .strafeTo(new Vector2d(-28, -6))
                     .build());
 
         }

@@ -227,7 +227,8 @@ public class AUTOLeftPreload extends LinearOpMode {
                     .afterTime(0, outtakeSample)
                     .afterTime(0.5, slidesGround)
                     .afterTime(1, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-40, -10), Math.toRadians(0))
+                            .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0))
+                            .strafeTo(new Vector2d(-28, -6))
                             .build())
                     .build());
 

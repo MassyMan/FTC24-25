@@ -32,7 +32,7 @@ public class Teleop extends OpMode {
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
     private static final double V4BAR_MAX_POSITION = 0.928;
-    private double v4BarPosition = 0.25;
+    private double v4BarPosition = 0.25; // V4Bar Assumption starting position (will travel to after being moved)
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
     // Slide rotation tracking [extendo]
@@ -46,11 +46,11 @@ public class Teleop extends OpMode {
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
 
     // Threshold for detecting wraparound [extendo]
-    private static final double WRAPAROUND_THRESHOLD = 1.65;
+    private static final double WRAPAROUND_THRESHOLD = 1.69;
 
     // Limits for degrees [extendo]
     private static final double EXTEND_LIMIT_DEGREES = 850.0;
-    private static final double RETRACT_LIMIT_DEGREES = 255.0;
+    private static final double RETRACT_LIMIT_DEGREES = 265.0;
 
     @Override
     public void init() {
@@ -94,7 +94,7 @@ public class Teleop extends OpMode {
         double drive = -gamepad1.left_stick_y;
         double strafe = gamepad1.left_stick_x;
         double rotate = gamepad1.right_stick_x;
-        double speedMultiplier = gamepad1.right_trigger > 0.1 ? 0.3 : 1.0;
+        double speedMultiplier = gamepad1.right_trigger > 0.1 ? 0.5 : 1.0;
 
         leftFront.setPower(Range.clip((drive + strafe + rotate) * speedMultiplier, -1.0, 1.0));
         leftBack.setPower(Range.clip((drive - strafe + rotate) * speedMultiplier, -1.0, 1.0));
@@ -137,8 +137,8 @@ public class Teleop extends OpMode {
             intake.setPower(-1.0); // Intake
             intake2.setPower(1.0); // Intake2 in the opposite direction
         } else if (gamepad2.left_trigger > 0.1) {
-            intake.setPower(1.0); // Outtake
-            intake2.setPower(-1.0); // Intake2 in the opposite direction
+            intake.setPower(0.5); // Outtake
+            intake2.setPower(-0.5); // Intake2 in the opposite direction
         } else {
             intake.setPower(0);
             intake2.setPower(0);
@@ -146,10 +146,10 @@ public class Teleop extends OpMode {
 
         // v4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
-            v4BarPosition -= 0.006;
+            v4BarPosition -= 0.005;
             v4BarMoved = true;
         } else if (gamepad2.right_trigger > 0.1) {
-            v4BarPosition += 0.006;
+            v4BarPosition += 0.005;
             v4BarMoved = true;
         }
 
@@ -172,6 +172,10 @@ public class Teleop extends OpMode {
                 // Prevent moving further up if already at the maximum
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
+            } else if (currentPosition <= 500 && gamepad2.right_stick_y > 0.1) {
+                // Slow down when slides are within 500 ticks from the bottom
+                vertL.setPower(-0.5 * gamepad2.right_stick_y);
+                vertR.setPower(0.5 * gamepad2.right_stick_y);
             } else {
                 // Allow free movement up or down within the range
                 vertL.setPower(-gamepad2.right_stick_y);
@@ -191,13 +195,11 @@ public class Teleop extends OpMode {
             vertR.setPower(0);
         }
 
-
         // Telemetry
-        telemetry.addData("Degrees:", totalDegrees);
-        telemetry.addData("Current Voltage:", currentVoltage);
-        telemetry.addData("Vertical Current Position:", currentPosition);
-        telemetry.addData("ee", "SKIBIDI");
-        telemetry.addData("ALL SYSTEMS SKIBIDI", gamepad2.right_stick_y);
+        telemetry.addData("EXTENDO Degrees:", totalDegrees);
+        telemetry.addData("EXTENDO Current Voltage:", currentVoltage);
+        telemetry.addData("VERTS Current Position:", currentPosition);
+        telemetry.addData("VERTS Target Stick", gamepad2.right_stick_y);
         telemetry.update();
     }
 }

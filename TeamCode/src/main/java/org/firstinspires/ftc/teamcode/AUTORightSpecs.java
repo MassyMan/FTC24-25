@@ -17,8 +17,8 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@Autonomous(name = "RIGHT PRELOAD + PARK", group = "Autonomous")
-public class AUTORightPreload extends LinearOpMode {
+@Autonomous(name = "RIGHT 3 SPECS", group = "Autonomous")
+public class AUTORightSpecs extends LinearOpMode {
 
     private SlideLift slideLift;
     private Servo v4Bar;
@@ -81,7 +81,7 @@ public class AUTORightPreload extends LinearOpMode {
             vertR.setPower(power);
 
             // Check if within the threshold for holding power at non-zero targets
-            if (Math.abs(error) <= THRESHOLD + 50 && targetPosition != 0) {
+            if (Math.abs(error) <= THRESHOLD + 80 && targetPosition != 0) {
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(HOLD_POWER);
                 telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
@@ -206,31 +206,63 @@ public class AUTORightPreload extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             // ACTIONS FOR AUTO
-            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1690);
+            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1800);
+            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 1173);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
-            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
-            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -0.1, 0.5);
+            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 1.0, 0.5);
+            IntakeSpinAction holdSpecimen = new IntakeSpinAction(intake, intake2, -0.1, 0.5);
+            IntakeSpinAction intakeSpecimen = new IntakeSpinAction(intake, intake2, -0.8, 1.5);
 
-            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.37);
+            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.39);
             V4BarAction V4BarRetract = new V4BarAction(v4Bar, 0.22);
-
+            V4BarAction V4BarSpecimen = new V4BarAction(v4Bar, 0.48);
 
             // SEQUENCE FOR DRIVING FROM STARTING POSITION TO SUBMERSIBLE WHILE RAISING SLIDES
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen) // RAISE SLIDES ACTION FOR HIGH CHAMBER
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeTo(new Vector2d(0, -33))
+                    .strafeTo(new Vector2d(5, -33))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
-                    .afterTime(0, new SlideLiftAction(slideLift, 0))
-                    .afterTime(1, V4BarRetract)
-                    .afterTime(0, intakeSample)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
-                            .strafeTo(new Vector2d(60, -56))
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
+                    .afterTime(0, slidesGround)
+                    .afterTime(1.5, V4BarRetract)
+                    .afterTime(0, holdSpecimen)
+                    .afterTime(1.8, outtakeSample) // Failsafe outtake, in case specimen did not release
+                    .afterTime(6, V4BarSpecimen)
+                    .afterTime(1, drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90))) // Locations of grounds on X-axis: 48, 58, 64
+                            .setReversed(true)
+                            .strafeTo(new Vector2d(35, -40))
+                            .turn(Math.toRadians(180))
+                            .strafeTo(new Vector2d(35, -10))
+                            .strafeTo(new Vector2d(46, -10))
+                            .strafeTo(new Vector2d(46, -52))
                             .build())
                     .build());
+
+            Actions.runBlocking(drive.actionBuilder(startPose)
+                    .stopAndAdd(intakeSpecimen)
+                    .afterTime(0, slidesSpecimen)
+                    .afterTime(1.5, V4BarDeposit)
+                    .afterTime(0.5, drive.actionBuilder(new Pose2d(46, -52, Math.toRadians(270))) // Locations of grounds on X-axis: 48, 58, 64
+                            .strafeTo(new Vector2d(46, -45))
+                            .strafeToSplineHeading(new Vector2d(0, -45), (Math.toRadians(90)))
+                            .strafeTo(new Vector2d(0, -33))
+                            .build())
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(0, -33, Math.toRadians(90)))
+                    .afterTime(0, slidesGround)
+                    .afterTime(1.5, V4BarRetract)
+                    .afterTime(0, holdSpecimen)
+                    .afterTime(1, drive.actionBuilder(new Pose2d(0, -33, Math.toRadians(90))) // Locations of grounds on X-axis: 48, 58, 64
+                            .strafeTo(new Vector2d(5, -50))
+                            .strafeTo(new Vector2d(50, -54))
+                            .build())
+                    .build());
+
         }
     }
 

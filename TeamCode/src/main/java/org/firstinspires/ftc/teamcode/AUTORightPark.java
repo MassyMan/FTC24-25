@@ -194,7 +194,7 @@ public class AUTORightPark extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(0));
+        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -217,7 +217,7 @@ public class AUTORightPark extends LinearOpMode {
 
             // SEQUENCE FOR DRIVING FROM STARTING POSITION TO PARKING LOCATION [HUMAN PLAYER STATION]
             Actions.runBlocking(drive.actionBuilder(startPose)
-                    .strafeTo(new Vector2d(50, -55))
+                    .strafeTo(new Vector2d(60, -55))
                     .build());
 
 

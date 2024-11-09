@@ -220,15 +220,15 @@ public class AUTORight4 extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen) // RAISE SLIDES ACTION FOR HIGH CHAMBER
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeTo(new Vector2d(0, -33))
+                    .strafeTo(new Vector2d(5, -33))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
                     .afterTime(0, new SlideLiftAction(slideLift, 0))
                     .afterTime(1, V4BarRetract)
                     .afterTime(0, intakeSample)
                     .afterTime(3, outtakeSample) // Failsafe outtake, in case specimen did not release
-                    .afterTime(1, drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
+                    .afterTime(1, drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
                             .strafeTo(new Vector2d(37, -50))
                             .strafeTo(new Vector2d(37, -10))
                             .strafeTo(new Vector2d(48, -10))
@@ -239,8 +239,8 @@ public class AUTORight4 extends LinearOpMode {
                             .strafeTo(new Vector2d(58, -50))
 
                             .strafeTo(new Vector2d(58, -10))
-                            .strafeTo(new Vector2d(63, -10))
-                            .strafeTo(new Vector2d(63, -50))
+                            .strafeTo(new Vector2d(64, -10))
+                            .strafeTo(new Vector2d(64, -50))
                             .build())
                     .build());
         }
