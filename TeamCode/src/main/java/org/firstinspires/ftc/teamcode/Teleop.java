@@ -46,11 +46,11 @@ public class Teleop extends OpMode {
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
 
     // Threshold for detecting wraparound [extendo]
-    private static final double WRAPAROUND_THRESHOLD = 1.69;
+    private static final double WRAPAROUND_THRESHOLD = 1.65;
 
     // Limits for degrees [extendo]
-    private static final double EXTEND_LIMIT_DEGREES = 850.0;
-    private static final double RETRACT_LIMIT_DEGREES = 265.0;
+    private static final double EXTEND_LIMIT_DEGREES = 800.0;
+    private static final double RETRACT_LIMIT_DEGREES = 280.0;
 
     @Override
     public void init() {
@@ -94,7 +94,7 @@ public class Teleop extends OpMode {
         double drive = -gamepad1.left_stick_y;
         double strafe = gamepad1.left_stick_x;
         double rotate = gamepad1.right_stick_x;
-        double speedMultiplier = gamepad1.right_trigger > 0.1 ? 0.5 : 1.0;
+        double speedMultiplier = gamepad1.right_trigger > 0.1 ? 0.3 : 1.0;
 
         leftFront.setPower(Range.clip((drive + strafe + rotate) * speedMultiplier, -1.0, 1.0));
         leftBack.setPower(Range.clip((drive - strafe + rotate) * speedMultiplier, -1.0, 1.0));
@@ -153,9 +153,17 @@ public class Teleop extends OpMode {
             v4BarMoved = true;
         }
 
+        if (gamepad2.dpad_left) {
+            v4BarPosition = 0.5;
+        }
+
         v4BarPosition = Range.clip(v4BarPosition, V4BAR_MIN_POSITION, V4BAR_MAX_POSITION);
         if (v4BarMoved) {
             v4Bar.setPosition(v4BarPosition);
+        }
+
+        if (gamepad2.dpad_up) {
+            v4BarPosition = 0.33;
         }
 
 // Get the current position of the vertical slide motor (vertL)
@@ -172,7 +180,7 @@ public class Teleop extends OpMode {
                 // Prevent moving further up if already at the maximum
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
-            } else if (currentPosition <= 500 && gamepad2.right_stick_y > 0.1) {
+            } else if (currentPosition <= 900 && gamepad2.right_stick_y > 0.5) {
                 // Slow down when slides are within 500 ticks from the bottom
                 vertL.setPower(-0.5 * gamepad2.right_stick_y);
                 vertR.setPower(0.5 * gamepad2.right_stick_y);

@@ -212,56 +212,58 @@ public class AUTORightSpecs extends LinearOpMode {
 
             IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 1.0, 0.5);
             IntakeSpinAction holdSpecimen = new IntakeSpinAction(intake, intake2, -0.1, 0.5);
-            IntakeSpinAction intakeSpecimen = new IntakeSpinAction(intake, intake2, -0.8, 1.5);
+            IntakeSpinAction intakeSpecimen = new IntakeSpinAction(intake, intake2, -1.0, 1.5);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.39);
             V4BarAction V4BarRetract = new V4BarAction(v4Bar, 0.22);
-            V4BarAction V4BarSpecimen = new V4BarAction(v4Bar, 0.48);
+            V4BarAction V4BarWall = new V4BarAction(v4Bar, 0.495);
+            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.94);
 
             // SEQUENCE FOR DRIVING FROM STARTING POSITION TO SUBMERSIBLE WHILE RAISING SLIDES
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen) // RAISE SLIDES ACTION FOR HIGH CHAMBER
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeTo(new Vector2d(5, -33))
+                    .strafeTo(new Vector2d(5, -34))
                     .build());
 
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(5, -34, Math.toRadians(90)))
                     .afterTime(0, slidesGround)
-                    .afterTime(1.5, V4BarRetract)
                     .afterTime(0, holdSpecimen)
-                    .afterTime(1.8, outtakeSample) // Failsafe outtake, in case specimen did not release
-                    .afterTime(6, V4BarSpecimen)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90))) // Locations of grounds on X-axis: 48, 58, 64
-                            .setReversed(true)
-                            .strafeTo(new Vector2d(35, -40))
-                            .turn(Math.toRadians(180))
-                            .strafeTo(new Vector2d(35, -10))
-                            .strafeTo(new Vector2d(46, -10))
-                            .strafeTo(new Vector2d(46, -52))
+                    .afterTime(1, outtakeSample) // Failsafe outtake, in case specimen did not release
+                    .afterTime(1.2, V4BarGround)
+                    .afterTime(0.5, drive.actionBuilder(new Pose2d(5, -34, Math.toRadians(90))) // Locations of grounds on X-axis: 48, 58, 64
+                            .strafeToSplineHeading(new Vector2d(37, -40), Math.toRadians(50))
                             .build())
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(startPose)
-                    .stopAndAdd(intakeSpecimen)
-                    .afterTime(0, slidesSpecimen)
-                    .afterTime(1.5, V4BarDeposit)
-                    .afterTime(0.5, drive.actionBuilder(new Pose2d(46, -52, Math.toRadians(270))) // Locations of grounds on X-axis: 48, 58, 64
-                            .strafeTo(new Vector2d(46, -45))
-                            .strafeToSplineHeading(new Vector2d(0, -45), (Math.toRadians(90)))
-                            .strafeTo(new Vector2d(0, -33))
-                            .build())
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(37, -40, Math.toRadians(50)))
+                    .afterTime(0, intakeSpecimen) // RAISE SLIDES ACTION FOR HIGH CHAMBER
+                    .afterTime(1, V4BarWall) // V4BAR DEPOSIT POSITION
+                    .afterTime(1.8, outtakeSample)
+                    .afterTime(2.4, intakeSpecimen)
+                    .strafeTo(new Vector2d(49, -24))
+                    .strafeToSplineHeading(new Vector2d(42, -48), Math.toRadians(267))
+                    .waitSeconds(0.5)
+                    .strafeTo(new Vector2d(42, -54))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(0, -33, Math.toRadians(90)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(42, -54, Math.toRadians(267)))
+                    .afterTime(0, slidesDeposit) // RAISE SLIDES ACTION FOR HIGH CHAMBER
+                    .afterTime(0.5, V4BarDeposit) // V4BAR DEPOSIT POSITION
+                    .strafeToSplineHeading(new Vector2d(5, -34), Math.toRadians(90))
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(5, -34, Math.toRadians(90)))
                     .afterTime(0, slidesGround)
-                    .afterTime(1.5, V4BarRetract)
                     .afterTime(0, holdSpecimen)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(0, -33, Math.toRadians(90))) // Locations of grounds on X-axis: 48, 58, 64
-                            .strafeTo(new Vector2d(5, -50))
-                            .strafeTo(new Vector2d(50, -54))
+                    .afterTime(1, outtakeSample) // Failsafe outtake, in case specimen did not release
+                    .afterTime(1.2, V4BarGround)
+                    .afterTime(0.5, drive.actionBuilder(new Pose2d(5, -34, Math.toRadians(90))) // Locations of grounds on X-axis: 48, 58, 64
+                            .strafeToSplineHeading(new Vector2d(37, -40), Math.toRadians(50))
                             .build())
                     .build());
+
 
         }
     }
