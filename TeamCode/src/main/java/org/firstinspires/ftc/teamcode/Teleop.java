@@ -203,6 +203,16 @@ public class Teleop extends OpMode {
             vertR.setPower(0);
         }
 
+        if (gamepad2.dpad_down){
+            if (currentPosition <= 1580){
+                vertL.setPower(1.0);
+                vertR.setPower(-1.0);
+            } else if (currentPosition >= 1580) {
+                vertL.setPower(HOLD_POWER);
+                vertR.setPower(-HOLD_POWER);
+            }
+        }
+
         // Telemetry
         telemetry.addData("EXTENDO Degrees:", totalDegrees);
         telemetry.addData("EXTENDO Current Voltage:", currentVoltage);
