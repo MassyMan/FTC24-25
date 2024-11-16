@@ -210,11 +210,11 @@ public class AUTOLeft4 extends LinearOpMode {
             SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3890);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
-            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.2);
-            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 0.75);
+            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.8, 0.2);
+            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 1.25);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.28);
-            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.9);
+            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.94);
 
 
             // SEQUENCE FOR DRIVING FROM STARTING POSITION TO BUCKET WHILE RAISING SLIDES
@@ -286,10 +286,10 @@ public class AUTOLeft4 extends LinearOpMode {
                     .build());
 
             Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -23, Math.toRadians(180)))
-                    .afterTime(0, intakeSample)
+                    .afterTime(0.5, intakeSample)
                     .afterTime(1.9, V4BarDeposit)
                     .afterTime(2.5, slidesDeposit)
-                    .strafeTo(new Vector2d(-58, -23))
+                    .strafeTo(new Vector2d(-60, -23))
                     .strafeToLinearHeading(new Vector2d(-53, -51), Math.toRadians(225))
                     .build());
 

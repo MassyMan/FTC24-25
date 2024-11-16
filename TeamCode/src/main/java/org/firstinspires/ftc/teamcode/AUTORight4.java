@@ -31,7 +31,7 @@ public class AUTORight4 extends LinearOpMode {
     public static final int THRESHOLD = 80;
     private static final int MAX_TICKS = 3900;
     private static final double HOLD_POWER = 0.1;
-    private static final double MIN_DOWN_POWER = -0.90;
+    private static final double MIN_DOWN_POWER = -0.95;
 
     public class SlideLift {
         private DcMotorEx vertL;
@@ -65,10 +65,12 @@ public class AUTORight4 extends LinearOpMode {
                 power = Math.max(power, MIN_DOWN_POWER);
             }
 
-
+            // Set motor power
+            vertL.setPower(power);
+            vertR.setPower(power);
 
             // If the target position is zero and slides are below 100 ticks, stop the motors
-            if ((currentPosition <= 150) && (power < 0) && targetPosition <= 100) {
+            if ((currentPosition <= 300) && targetPosition <= 100) {
                 vertL.setPower(0);
                 vertR.setPower(0);
                 telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
@@ -76,9 +78,6 @@ public class AUTORight4 extends LinearOpMode {
                 return;
             }
 
-            // Set motor power
-            vertL.setPower(power);
-            vertR.setPower(power);
 
             // Check if within the threshold for holding power at non-zero targets
             if (Math.abs(error) <= THRESHOLD + 50 && targetPosition != 0) {
@@ -206,11 +205,11 @@ public class AUTORight4 extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             // ACTIONS FOR AUTO
-            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1690);
+            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1650);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
             IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
-            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -0.1, 0.5);
+            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -0.4, 0.5);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.37);
             V4BarAction V4BarRetract = new V4BarAction(v4Bar, 0.22);
@@ -227,7 +226,7 @@ public class AUTORight4 extends LinearOpMode {
                     .afterTime(0, new SlideLiftAction(slideLift, 0))
                     .afterTime(1, V4BarRetract)
                     .afterTime(0, intakeSample)
-                    .afterTime(3, outtakeSample) // Failsafe outtake, in case specimen did not release
+                    .afterTime(1, outtakeSample) // Failsafe outtake, in case specimen did not release
                     .afterTime(1, drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
                             .strafeTo(new Vector2d(37, -50))
                             .strafeTo(new Vector2d(37, -10))
@@ -239,8 +238,8 @@ public class AUTORight4 extends LinearOpMode {
                             .strafeTo(new Vector2d(58, -50))
 
                             .strafeTo(new Vector2d(58, -10))
-                            .strafeTo(new Vector2d(64, -10))
-                            .strafeTo(new Vector2d(64, -50))
+                            .strafeTo(new Vector2d(63, -10))
+                            .strafeTo(new Vector2d(63, -55))
                             .build())
                     .build());
         }
