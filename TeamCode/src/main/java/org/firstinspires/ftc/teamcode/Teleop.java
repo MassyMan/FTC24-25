@@ -137,8 +137,8 @@ public class Teleop extends OpMode {
             intake.setPower(-1.0); // Intake
             intake2.setPower(1.0); // Intake2 in the opposite direction
         } else if (gamepad2.left_trigger > 0.1) {
-            intake.setPower(0.5); // Outtake
-            intake2.setPower(-0.5); // Intake2 in the opposite direction
+            intake.setPower(0.3); // Outtake
+            intake2.setPower(-0.3); // Intake2 in the opposite direction
         } else {
             intake.setPower(0);
             intake2.setPower(0);
