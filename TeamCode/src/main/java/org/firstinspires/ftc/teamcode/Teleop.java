@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -40,10 +41,12 @@ public class Teleop extends OpMode {
     private int fullRotations = 0;
 
     // Voltage range constants for the encoder (analog signal) [extendo]
-    private static final double VOLTAGE_MIN = 0.0;
+    private static final double VOLTAGE_MIN = 0;
     private static final double VOLTAGE_MAX = 3.4;
     private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
     private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
+    private int rotationCount = 0;
+    private int previousState = 0;
 
     // Threshold for detecting wraparound [extendo]
     private static final double WRAPAROUND_THRESHOLD = 1.65;
@@ -101,7 +104,61 @@ public class Teleop extends OpMode {
         rightFront.setPower(Range.clip((drive - strafe - rotate) * speedMultiplier, -1.0, 1.0));
         rightBack.setPower(Range.clip((drive + strafe - rotate) * speedMultiplier, -1.0, 1.0));
 
+        double currentVoltage = axonR.getVoltage();
+        double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
+        double highRange = (((VOLTAGE_MAX - VOLTAGE_MIN) / 3) * 2); // Upper third range
+        double lowRange = ((VOLTAGE_MAX - VOLTAGE_MIN) / 3);  // Lower third range
+        int currentState;
+
+
+// Determine the current state based on the voltage range
+        if (currentVoltage >= highRange) {
+            currentState = 3;
+        } else if (currentVoltage <= lowRange) {
+            currentState = 1;
+        } else {
+            currentState = 2;
+        }
+
+// Track the rotations
+        if (previousState == 3 && currentState == 1) {
+            rotationCount++; // Forward wrap
+        } else if (previousState == 1 && currentState == 3) {
+            rotationCount--; // Backward wrap
+        }
+        previousState = currentState;
+
+        if (rotationCount == 2 && currentVoltage > 0.5){
+            if (gamepad2.left_stick_y < 0.0) {
+                slidL.setPower(0);
+                slidR.setPower(0);
+                telemetry.addData("EXTENDO AT EXTENSION LIMIT", "");
+            } else {
+                slidL.setPower(-gamepad2.left_stick_y);
+                slidR.setPower(gamepad2.left_stick_y);
+            }
+        } else if (rotationCount == 0 && currentVoltage < 2.5){
+                if (gamepad2.left_stick_y > 0.0) {
+                    slidL.setPower(0);
+                    slidR.setPower(0);
+                    telemetry.addData("EXTENDO AT RETRACTION LIMIT", "");
+                } else {
+                    slidL.setPower(-gamepad2.left_stick_y);
+                    slidR.setPower(gamepad2.left_stick_y);
+                }
+        } else {
+            slidL.setPower(-gamepad2.left_stick_y);
+            slidR.setPower(gamepad2.left_stick_y);
+        }
+
+
+
+// Update the previous state for the next loop
+        previousState = currentState;
+
+
         // Slide rotation and extension control with reversed joystick direction
+        /*
         double currentVoltage = axonR.getVoltage();
         double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
 
@@ -132,6 +189,8 @@ public class Teleop extends OpMode {
 
         previousVoltage = currentVoltage;
 
+
+         */
         // Intake control
         if (gamepad2.left_bumper) {
             intake.setPower(-1.0); // Intake
@@ -214,8 +273,11 @@ public class Teleop extends OpMode {
         }
 
         // Telemetry
-        telemetry.addData("EXTENDO Degrees:", totalDegrees);
+        telemetry.addData("EXTENDO Rotation Count:", rotationCount);
+        telemetry.addData("EXTENDO Current State:", currentState);
+        telemetry.addData("EXTENDO Previous State:", previousState);
         telemetry.addData("EXTENDO Current Voltage:", currentVoltage);
+        telemetry.addData("GAMEPAD2.LEFT_STICK_Y:", gamepad2.left_stick_y);
         telemetry.addData("VERTS Current Position:", currentPosition);
         telemetry.addData("VERTS Target Stick", gamepad2.right_stick_y);
         telemetry.update();
