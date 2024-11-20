@@ -27,7 +27,7 @@ public class Teleop extends OpMode {
     // Analog encoder for slidL [extendo]
     private AnalogInput axonR;
 
-    private static final int MAX_TICKS = 3800;
+    private static final int MAX_TICKS = 3880;
     private static final double HOLD_POWER = 0.1;
 
     // V4Bar position limits
@@ -138,14 +138,14 @@ public class Teleop extends OpMode {
                 slidR.setPower(gamepad2.left_stick_y);
             }
         } else if (rotationCount == 0 && currentVoltage < 2.5){
-                if (gamepad2.left_stick_y > 0.0) {
-                    slidL.setPower(0);
-                    slidR.setPower(0);
-                    telemetry.addData("EXTENDO AT RETRACTION LIMIT", "");
-                } else {
-                    slidL.setPower(-gamepad2.left_stick_y);
-                    slidR.setPower(gamepad2.left_stick_y);
-                }
+            if (gamepad2.left_stick_y > 0.0) {
+                slidL.setPower(0);
+                slidR.setPower(0);
+                telemetry.addData("EXTENDO AT RETRACTION LIMIT", "");
+            } else {
+                slidL.setPower(-gamepad2.left_stick_y);
+                slidR.setPower(gamepad2.left_stick_y);
+            }
         } else {
             slidL.setPower(-gamepad2.left_stick_y);
             slidR.setPower(gamepad2.left_stick_y);
@@ -213,7 +213,7 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad2.dpad_left) {
-            v4BarPosition = 0.5;
+            v4BarPosition = 0.51;
         }
 
         v4BarPosition = Range.clip(v4BarPosition, V4BAR_MIN_POSITION, V4BAR_MAX_POSITION);
@@ -263,10 +263,10 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad2.dpad_down){
-            if (currentPosition <= 1580){
+            if (currentPosition <= 1630){
                 vertL.setPower(1.0);
                 vertR.setPower(-1.0);
-            } else if (currentPosition >= 1580) {
+            } else if (currentPosition >= 1630) {
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
             }

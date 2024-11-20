@@ -210,7 +210,7 @@ public class AUTOLeft4 extends LinearOpMode {
             SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3890);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
-            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.8, 0.2);
+            IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 1.0, 0.2);
             IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -1.0, 1.25);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.28);
@@ -221,13 +221,13 @@ public class AUTOLeft4 extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesDeposit) // RAISE SLIDES ACTION FOR HIGH BUCKET
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225)) // BUCKET POSITION
+                    .strafeToLinearHeading(new Vector2d(-54, -53), Math.toRadians(225)) // BUCKET POSITION
                     .build());
 
             // INTAKE: 0.5 = outtake, -1.0 = intake
 
             // SEQUENCE FOR OUTTAKING PRELOAD, LOWERING SLIDES, DRIVING TO FIRST GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.2, slidesGround)
                     .afterTime(1.5, V4BarGround)
@@ -251,11 +251,11 @@ public class AUTOLeft4 extends LinearOpMode {
                     .build());
 
             // SEQUENCE FOR DEPOSITING FIRST GROUND, DRIVING TO SECOND GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.2, slidesGround)
                     .afterTime(1.5, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                             .strafeToLinearHeading(new Vector2d(-58, -42), Math.toRadians(90))
                             .build())
                     .build());
@@ -271,32 +271,32 @@ public class AUTOLeft4 extends LinearOpMode {
                     .afterTime(0, V4BarDeposit)
                     .afterTime(0, slidesDeposit)
                     .strafeTo(new Vector2d(-58, -32))
-                    .strafeToLinearHeading(new Vector2d(-54, -52), Math.toRadians(225))
+                    .strafeToLinearHeading(new Vector2d(-54, -53), Math.toRadians(225))
 
                     .build());
 
             // DEPOSIT SECOND GROUND, DRIVE TO THIRD GROUND
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)   // OUTTAKE
                     .afterTime(0.2, slidesGround)
                     .afterTime(1.5, V4BarGround)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-50, -23), Math.toRadians(180))
+                    .afterTime(1, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
+                            .strafeToLinearHeading(new Vector2d(-50, -33), Math.toRadians(170))
                             .build())
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -23, Math.toRadians(180)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -33, Math.toRadians(170)))
                     .afterTime(0.5, intakeSample)
                     .afterTime(1.9, V4BarDeposit)
                     .afterTime(2.5, slidesDeposit)
                     .strafeTo(new Vector2d(-60, -23))
-                    .strafeToLinearHeading(new Vector2d(-53, -51), Math.toRadians(225))
+                    .strafeToLinearHeading(new Vector2d(-54, -53), Math.toRadians(225))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)
                     .afterTime(0.2, slidesGround)
-                    .afterTime(0.2, drive.actionBuilder(new Pose2d(-54, -52, Math.toRadians(225)))
+                    .afterTime(0.2, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
                             .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0))
                             .strafeTo(new Vector2d(-28, -6))
                             .build())
