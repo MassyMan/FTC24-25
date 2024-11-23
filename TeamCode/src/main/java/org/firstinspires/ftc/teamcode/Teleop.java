@@ -151,46 +151,10 @@ public class Teleop extends OpMode {
             slidR.setPower(gamepad2.left_stick_y);
         }
 
-
-
-// Update the previous state for the next loop
+        // Update the previous state for the next loop
         previousState = currentState;
 
 
-        // Slide rotation and extension control with reversed joystick direction
-        /*
-        double currentVoltage = axonR.getVoltage();
-        double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
-
-        if (currentVoltage < VOLTAGE_MIN + WRAPAROUND_THRESHOLD && previousVoltage > VOLTAGE_MAX - WRAPAROUND_THRESHOLD) {
-            fullRotations++;
-        } else if (currentVoltage > VOLTAGE_MAX - WRAPAROUND_THRESHOLD && previousVoltage < VOLTAGE_MIN + WRAPAROUND_THRESHOLD) {
-            fullRotations--;
-        }
-
-        double totalDegrees = (fullRotations * 360) + currentDegrees;
-
-        // Reverse direction of left_stick_y for slide control
-        double slidePower = -gamepad2.left_stick_y;
-        double scaledPower = slidePower;
-
-        // Check if close to extend or retract limits and adjust power accordingly
-        if (slidePower > 0 && totalDegrees > (EXTEND_LIMIT_DEGREES - 100)) { // Approaching extend limit
-            double error = EXTEND_LIMIT_DEGREES - totalDegrees;
-            scaledPower = Range.clip(slidePower * (error / 100), 0.1, slidePower); // Slow down as error decreases
-        } else if (slidePower < 0 && totalDegrees < (RETRACT_LIMIT_DEGREES + 100)) { // Approaching retract limit
-            double error = totalDegrees - RETRACT_LIMIT_DEGREES;
-            scaledPower = Range.clip(slidePower * (error / 100), slidePower, -0.1); // Slow down as error decreases
-        }
-
-        // Apply scaled power to the slides
-        slidL.setPower(scaledPower);
-        slidR.setPower(-scaledPower);
-
-        previousVoltage = currentVoltage;
-
-
-         */
         // Intake control
         if (gamepad2.left_bumper) {
             intake.setPower(-1.0); // Intake
