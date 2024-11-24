@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -27,7 +26,7 @@ public class Teleop extends OpMode {
     // Analog encoder for slidL [extendo]
     private AnalogInput axonR;
 
-    private static final int MAX_TICKS = 3880;
+    private static final int MAX_TICKS = 3860;
     private static final double HOLD_POWER = 0.1;
 
     // V4Bar position limits
@@ -36,24 +35,14 @@ public class Teleop extends OpMode {
     private double v4BarPosition = 0.25; // V4Bar Assumption starting position (will travel to after being moved)
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
-    // Slide rotation tracking [extendo]
-    private double previousVoltage = 0;
-    private int fullRotations = 0;
 
-    // Voltage range constants for the encoder (analog signal) [extendo]
-    private static final double VOLTAGE_MIN = 0;
-    private static final double VOLTAGE_MAX = 3.4;
-    private static final double VOLTAGE_RANGE = VOLTAGE_MAX - VOLTAGE_MIN;
-    private static final double DEGREES_PER_VOLT = 360 / VOLTAGE_RANGE;
-    private int rotationCount = 0;
-    private int previousState = 0;
+    private double adjustedposition;
+    private int degreestochange = 0;
+    private int adddegrees = 180;
+    private  double axonrawposition;
+    private double previousposition;
+    private double axonposition;
 
-    // Threshold for detecting wraparound [extendo]
-    private static final double WRAPAROUND_THRESHOLD = 1.65;
-
-    // Limits for degrees [extendo]
-    private static final double EXTEND_LIMIT_DEGREES = 800.0;
-    private static final double RETRACT_LIMIT_DEGREES = 280.0;
 
     @Override
     public void init() {
@@ -88,12 +77,14 @@ public class Teleop extends OpMode {
 
         // Initialize encoder and previous voltage
         axonR = hardwareMap.get(AnalogInput.class, "axonR");
-        previousVoltage = axonR.getVoltage();
+
+
     }
 
     @Override
     public void loop() {
         // Mecanum drive control
+
         double drive = -gamepad1.left_stick_y;
         double strafe = gamepad1.left_stick_x;
         double rotate = gamepad1.right_stick_x;
@@ -104,56 +95,35 @@ public class Teleop extends OpMode {
         rightFront.setPower(Range.clip((drive - strafe - rotate) * speedMultiplier, -1.0, 1.0));
         rightBack.setPower(Range.clip((drive + strafe - rotate) * speedMultiplier, -1.0, 1.0));
 
-        double currentVoltage = axonR.getVoltage();
-        double currentDegrees = currentVoltage * DEGREES_PER_VOLT;
-        double highRange = (((VOLTAGE_MAX - VOLTAGE_MIN) / 3) * 2); // Upper third range
-        double lowRange = ((VOLTAGE_MAX - VOLTAGE_MIN) / 3);  // Lower third range
-        int currentState;
+        // Variables for analog encoder
 
 
-// Determine the current state based on the voltage range
-        if (currentVoltage >= highRange) {
-            currentState = 3;
-        } else if (currentVoltage <= lowRange) {
-            currentState = 1;
+        axonrawposition = axonR.getVoltage() * (360 / 3.3);
+        if (axonrawposition >= 250) {
+            adddegrees = -360;
+        } else if (axonrawposition <= 110) {
+            adddegrees = 360;
         } else {
-            currentState = 2;
+            adddegrees = 0;
         }
-
-// Track the rotations
-        if (previousState == 3 && currentState == 1) {
-            rotationCount++; // Forward wrap
-        } else if (previousState == 1 && currentState == 3) {
-            rotationCount--; // Backward wrap
+        if (Math.abs(previousposition - axonrawposition) >= 180) {
+            degreestochange += adddegrees;
+            adddegrees = 0;
+            axonposition = previousposition - axonrawposition;
         }
-        previousState = currentState;
+        adjustedposition = axonrawposition + degreestochange;
+        previousposition = axonrawposition;
 
-        if (rotationCount == 2 && currentVoltage > 0.5){
-            if (gamepad2.left_stick_y < 0.0) {
-                slidL.setPower(0);
-                slidR.setPower(0);
-                telemetry.addData("EXTENDO AT EXTENSION LIMIT", "");
-            } else {
-                slidL.setPower(-gamepad2.left_stick_y);
-                slidR.setPower(gamepad2.left_stick_y);
-            }
-        } else if (rotationCount == 0 && currentVoltage < 2.5){
-            if (gamepad2.left_stick_y > 0.0) {
-                slidL.setPower(0);
-                slidR.setPower(0);
-                telemetry.addData("EXTENDO AT RETRACTION LIMIT", "");
-            } else {
-                slidL.setPower(-gamepad2.left_stick_y);
-                slidR.setPower(gamepad2.left_stick_y);
-            }
+        if (adjustedposition < 200 && gamepad2.left_stick_y > 0.1){
+            slidL.setPower(0);
+            slidR.setPower(0);
+        } else if (adjustedposition > 830 && gamepad2.left_stick_y < -0.1){
+            slidL.setPower(0);
+            slidR.setPower(0);
         } else {
-            slidL.setPower(-gamepad2.left_stick_y);
-            slidR.setPower(gamepad2.left_stick_y);
+            slidL.setPower(gamepad2.left_stick_y * -1);
+            slidR.setPower(gamepad2.left_stick_y * 1);
         }
-
-        // Update the previous state for the next loop
-        previousState = currentState;
-
 
         // Intake control
         if (gamepad2.left_bumper) {
@@ -167,12 +137,13 @@ public class Teleop extends OpMode {
             intake2.setPower(0);
         }
 
+
         // v4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
-            v4BarPosition -= 0.005;
+            v4BarPosition -= 0.009;
             v4BarMoved = true;
         } else if (gamepad2.right_trigger > 0.1) {
-            v4BarPosition += 0.005;
+            v4BarPosition += 0.009;
             v4BarMoved = true;
         }
 
@@ -189,58 +160,44 @@ public class Teleop extends OpMode {
             v4BarPosition = 0.33;
         }
 
-// Get the current position of the vertical slide motor (vertL)
+        // Get the current position of the vertical slide motor (vertL)
         int currentPosition = vertL.getCurrentPosition();
 
-// Slide Control
-
-        if (Math.abs(gamepad2.right_stick_y) > 0.1) {
-            if (currentPosition < 100 && gamepad2.right_stick_y > 0.1) {
-                // Prevent moving further down if already near the bottom
+        // Vertical slide control
+        if (Math.abs(gamepad2.right_stick_y) > 0.01 &! gamepad2.dpad_right) {
+            if (currentPosition < 50 && gamepad2.right_stick_y > 0.01) {
                 vertL.setPower(0);
                 vertR.setPower(0);
-            } else if (currentPosition >= MAX_TICKS && gamepad2.right_stick_y < -0.1) {
-                // Prevent moving further up if already at the maximum
-                vertL.setPower(HOLD_POWER);
-                vertR.setPower(-HOLD_POWER);
-            } else if (currentPosition <= 900 && gamepad2.right_stick_y > 0.5) {
-                // Slow down when slides are within 500 ticks from the bottom
-                vertL.setPower(-0.5 * gamepad2.right_stick_y);
-                vertR.setPower(0.5 * gamepad2.right_stick_y);
+            } else if (currentPosition < 400 && gamepad2.right_stick_y > 0.01){
+                vertL.setPower((-gamepad2.right_stick_y +0.5) / 6);
+                vertR.setPower((gamepad2.right_stick_y +0.5) / 6);
             } else {
-                // Allow free movement up or down within the range
                 vertL.setPower(-gamepad2.right_stick_y);
                 vertR.setPower(gamepad2.right_stick_y);
             }
-        } else if (currentPosition > 100 && currentPosition < MAX_TICKS) {
-            // Hold position if no input and within the range
+
+        } else if (gamepad2.dpad_right) {
+            vertL.setPower(-0.07);
+            vertR.setPower(0.07);
+        } else {
             vertL.setPower(HOLD_POWER);
             vertR.setPower(-HOLD_POWER);
-        } else if (currentPosition >= MAX_TICKS && gamepad2.right_stick_y > 0.1) {
-            // Allow moving down if at max position and joystick is pulling down
-            vertL.setPower(-gamepad2.right_stick_y);
-            vertR.setPower(gamepad2.right_stick_y);
-        } else {
-            // Stop the motors if no other condition applies
-            vertL.setPower(0);
-            vertR.setPower(0);
         }
 
-        if (gamepad2.dpad_down){
-            if (currentPosition <= 1630){
+        if (gamepad2.dpad_down) {
+            if (currentPosition <= 1447) {
                 vertL.setPower(1.0);
                 vertR.setPower(-1.0);
-            } else if (currentPosition >= 1630) {
+            } else {
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
             }
         }
 
         // Telemetry
-        telemetry.addData("EXTENDO Rotation Count:", rotationCount);
-        telemetry.addData("EXTENDO Current State:", currentState);
-        telemetry.addData("EXTENDO Previous State:", previousState);
-        telemetry.addData("EXTENDO Current Voltage:", currentVoltage);
+        telemetry.addData("raw degrees", axonrawposition);
+        telemetry.addData("adjusted degrees", adjustedposition);
+        telemetry.addData("diff", previousposition - axonrawposition);
         telemetry.addData("GAMEPAD2.LEFT_STICK_Y:", gamepad2.left_stick_y);
         telemetry.addData("VERTS Current Position:", currentPosition);
         telemetry.addData("VERTS Target Stick", gamepad2.right_stick_y);

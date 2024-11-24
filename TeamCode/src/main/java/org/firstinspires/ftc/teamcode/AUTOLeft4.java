@@ -281,19 +281,20 @@ public class AUTOLeft4 extends LinearOpMode {
                     .afterTime(0.2, slidesGround)
                     .afterTime(1.5, V4BarGround)
                     .afterTime(1, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
-                            .strafeToLinearHeading(new Vector2d(-50, -33), Math.toRadians(170))
+                            .strafeToLinearHeading(new Vector2d(-51, -33), Math.toRadians(165))
                             .build())
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -33, Math.toRadians(170)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-51, -33, Math.toRadians(165)))
                     .afterTime(0.5, intakeSample)
                     .afterTime(1.9, V4BarDeposit)
                     .afterTime(2.5, slidesDeposit)
                     .strafeTo(new Vector2d(-60, -23))
-                    .strafeToLinearHeading(new Vector2d(-54, -53), Math.toRadians(225))
+                    .strafeToLinearHeading(new Vector2d(-34, -43), Math.toRadians(225))
+                    .strafeTo(new Vector2d(-54, -53))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -43, Math.toRadians(225)))
                     .afterTime(0, outtakeSample)
                     .afterTime(0.2, slidesGround)
                     .afterTime(0.2, drive.actionBuilder(new Pose2d(-54, -53, Math.toRadians(225)))
