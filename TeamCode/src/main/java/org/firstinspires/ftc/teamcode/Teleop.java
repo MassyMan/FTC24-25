@@ -98,7 +98,7 @@ public class Teleop extends OpMode {
         // Variables for analog encoder
 
 
-        axonrawposition = axonR.getVoltage() * (360 / 3.3);
+        axonrawposition = axonR.getVoltage() * (360 / 3.4);
         if (axonrawposition >= 250) {
             adddegrees = -360;
         } else if (axonrawposition <= 110) {
