@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -17,21 +18,37 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
-@Autonomous(name = "RIGHT PRELOAD + PARK", group = "Autonomous")
-public class AUTORightPreload extends LinearOpMode {
+@Autonomous(name = "RIGHT SPECS", group = "Autonomous")
+public class AUTORightSpecimens extends LinearOpMode {
 
     private SlideLift slideLift;
     private Servo v4Bar;
     private CRServo intake;
     private CRServo intake2;
-
     // PIDF control variables
-    public static double kP = 0.005;
-    public static double kF = 0.2;
-    public static final int THRESHOLD = 80;
+
     private static final int MAX_TICKS = 3900;
     private static final double HOLD_POWER = 0.1;
-    private static final double MIN_DOWN_POWER = -0.90;
+
+    private static final double MAX_EXTENDO = 3800;
+
+    public class ExtendoMove {
+        private DcMotorEx extendoEncoder;
+        private double targetExtendo = 0;
+
+        public ExtendoMove(HardwareMap hardwareMap) {
+            extendoEncoder = hardwareMap.get(DcMotorEx.class, "rightBack");
+            extendoEncoder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+
+        public void moveExtendo(double targetExtendo) {
+            targetExtendo = Range.clip(targetExtendo, 0, MAX_EXTENDO);
+        }
+
+    }
+
+
 
     public class SlideLift {
         private DcMotorEx vertL;
@@ -58,36 +75,10 @@ public class AUTORightPreload extends LinearOpMode {
             targetPosition = Range.clip(targetTicks, 0, MAX_TICKS);
             int currentPosition = vertL.getCurrentPosition();
             double error = targetPosition - currentPosition;
-            double power = kP * error + kF;
-            power = Range.clip(power, MIN_DOWN_POWER, 1.0);
-
-            if (power < 0) {
-                power = Math.max(power, MIN_DOWN_POWER);
-            }
 
 
 
-            // If the target position is zero and slides are below 100 ticks, stop the motors
-            if ((currentPosition <= 150) && (power < 0) && targetPosition <= 100) {
-                vertL.setPower(0);
-                vertR.setPower(0);
-                telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
-                telemetry.update();
-                return;
-            }
 
-            // Set motor power
-            vertL.setPower(power);
-            vertR.setPower(power);
-
-            // Check if within the threshold for holding power at non-zero targets
-            if (Math.abs(error) <= THRESHOLD + 50 && targetPosition != 0) {
-                vertL.setPower(HOLD_POWER);
-                vertR.setPower(HOLD_POWER);
-                telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
-                telemetry.update();
-                return;
-            }
 
 
 
@@ -96,7 +87,6 @@ public class AUTORightPreload extends LinearOpMode {
             telemetry.addData("Slide Lift", "Target Position: %d", (int) targetPosition);
             telemetry.addData("Current Position", currentPosition);
             telemetry.addData("Error", error);
-            telemetry.addData("Power Output", power);
             telemetry.addData("Is At Target", isAtTarget());
             telemetry.update();
         }
@@ -104,7 +94,7 @@ public class AUTORightPreload extends LinearOpMode {
 
 
         public boolean isAtTarget() {
-            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD + 30; // +10 to fix back out glitch
+            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= 30; // +10 to fix back out glitch
         }
     }
 
@@ -206,11 +196,11 @@ public class AUTORightPreload extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             // ACTIONS FOR AUTO
-            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1690);
+            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1650);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
             IntakeSpinAction outtakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.5);
-            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -0.1, 0.5);
+            IntakeSpinAction intakeSample = new IntakeSpinAction(intake, intake2, -0.4, 0.5);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.37);
             V4BarAction V4BarRetract = new V4BarAction(v4Bar, 0.22);
@@ -220,15 +210,27 @@ public class AUTORightPreload extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen) // RAISE SLIDES ACTION FOR HIGH CHAMBER
                     .afterTime(0, V4BarDeposit) // V4BAR DEPOSIT POSITION
-                    .strafeTo(new Vector2d(0, -33))
+                    .strafeTo(new Vector2d(5, -33))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
                     .afterTime(0, new SlideLiftAction(slideLift, 0))
                     .afterTime(1, V4BarRetract)
                     .afterTime(0, intakeSample)
-                    .afterTime(1, drive.actionBuilder(new Pose2d(0, -32.5, Math.toRadians(90)))
-                            .strafeTo(new Vector2d(60, -56))
+                    .afterTime(1, outtakeSample) // Failsafe outtake, in case specimen did not release
+                    .afterTime(1, drive.actionBuilder(new Pose2d(5, -33, Math.toRadians(90)))
+                            .strafeTo(new Vector2d(37, -50))
+                            .strafeTo(new Vector2d(37, -10))
+                            .strafeTo(new Vector2d(48, -10))
+                            .strafeTo(new Vector2d(48, -50))
+
+                            .strafeTo(new Vector2d(48, -10))
+                            .strafeTo(new Vector2d(58, -10))
+                            .strafeTo(new Vector2d(58, -50))
+
+                            .strafeTo(new Vector2d(58, -10))
+                            .strafeTo(new Vector2d(63, -10))
+                            .strafeTo(new Vector2d(63, -55))
                             .build())
                     .build());
         }

@@ -3,16 +3,19 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.util.Range;
 
+
 @TeleOp(name = "TELEOP", group = "TeleOp")
 public class Teleop extends OpMode {
     // Mecanum drive motors
     private DcMotor leftFront, leftBack, rightFront, rightBack;
-
+    private DcMotor extendoEncoder;
     // CRServos for slide control
     private CRServo slidL, slidR;
 
@@ -29,6 +32,8 @@ public class Teleop extends OpMode {
     private static final int MAX_TICKS = 3860;
     private static final double HOLD_POWER = 0.1;
 
+    private static final double MAX_EXTENDO = 3800;
+
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.25;
     private static final double V4BAR_MAX_POSITION = 0.928;
@@ -36,12 +41,7 @@ public class Teleop extends OpMode {
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
 
-    private double adjustedposition;
-    private int degreestochange = 0;
-    private int adddegrees = 180;
-    private  double axonrawposition;
-    private double previousposition;
-    private double axonposition;
+
 
 
     @Override
@@ -75,6 +75,10 @@ public class Teleop extends OpMode {
         vertL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         vertR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        extendoEncoder = hardwareMap.get(DcMotorEx.class, "leftBack");
+        extendoEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         // Initialize encoder and previous voltage
         axonR = hardwareMap.get(AnalogInput.class, "axonR");
 
@@ -95,35 +99,32 @@ public class Teleop extends OpMode {
         rightFront.setPower(Range.clip((drive - strafe - rotate) * speedMultiplier, -1.0, 1.0));
         rightBack.setPower(Range.clip((drive + strafe - rotate) * speedMultiplier, -1.0, 1.0));
 
-        // Variables for analog encoder
+
+        double currentExtendo = extendoEncoder.getCurrentPosition();
 
 
-        axonrawposition = axonR.getVoltage() * (360 / 3.4);
-        if (axonrawposition >= 250) {
-            adddegrees = -360;
-        } else if (axonrawposition <= 110) {
-            adddegrees = 360;
-        } else {
-            adddegrees = 0;
-        }
-        if (Math.abs(previousposition - axonrawposition) >= 180) {
-            degreestochange += adddegrees;
-            adddegrees = 0;
-            axonposition = previousposition - axonrawposition;
-        }
-        adjustedposition = axonrawposition + degreestochange;
-        previousposition = axonrawposition;
-
-        if (adjustedposition < 200 && gamepad2.left_stick_y > 0.1){
-            slidL.setPower(0);
-            slidR.setPower(0);
-        } else if (adjustedposition > 830 && gamepad2.left_stick_y < -0.1){
-            slidL.setPower(0);
-            slidR.setPower(0);
-        } else {
-            slidL.setPower(gamepad2.left_stick_y * -1);
-            slidR.setPower(gamepad2.left_stick_y * 1);
-        }
+        slidL.setPower(-gamepad2.left_stick_y);
+        slidR.setPower(gamepad2.left_stick_y);
+           /* if (currentExtendo < MAX_EXTENDO && currentExtendo > 50) { // if within good travel range, move freely
+                slidL.setPower(-gamepad2.left_stick_y);
+                slidR.setPower(gamepad2.left_stick_y);
+            } else if (currentExtendo > MAX_EXTENDO){
+                if (gamepad2.left_stick_y > 0) { // If at limit, only allow retraction
+                    slidL.setPower(-gamepad2.left_stick_y);
+                    slidR.setPower(gamepad2.left_stick_y);
+                } else {
+                    slidL.setPower(0); // stop motors if trying to move beyond limit
+                    slidR.setPower(0);
+                }
+            } else if (currentExtendo < 50) {
+                if (gamepad2.left_stick_y < 0) { // If at limit, only allow extension
+                    slidL.setPower(-gamepad2.left_stick_y);
+                    slidR.setPower(gamepad2.left_stick_y);
+                } else {
+                    slidL.setPower(0); // stop motors if trying to retract beyond limit
+                    slidR.setPower(0);
+                }
+            } */
 
         // Intake control
         if (gamepad2.left_bumper) {
@@ -162,7 +163,6 @@ public class Teleop extends OpMode {
 
         // Get the current position of the vertical slide motor (vertL)
         int currentPosition = vertL.getCurrentPosition();
-
         // Vertical slide control
         if (Math.abs(gamepad2.right_stick_y) > 0.01 &! gamepad2.dpad_right) {
             if (currentPosition < 50 && gamepad2.right_stick_y > 0.01) {
@@ -179,9 +179,6 @@ public class Teleop extends OpMode {
         } else if (gamepad2.dpad_right) {
             vertL.setPower(-0.07);
             vertR.setPower(0.07);
-        } else {
-            vertL.setPower(HOLD_POWER);
-            vertR.setPower(-HOLD_POWER);
         }
 
         if (gamepad2.dpad_down) {
@@ -195,9 +192,7 @@ public class Teleop extends OpMode {
         }
 
         // Telemetry
-        telemetry.addData("raw degrees", axonrawposition);
-        telemetry.addData("adjusted degrees", adjustedposition);
-        telemetry.addData("diff", previousposition - axonrawposition);
+        telemetry.addData("EXTENDO POSITION:", currentExtendo);
         telemetry.addData("GAMEPAD2.LEFT_STICK_Y:", gamepad2.left_stick_y);
         telemetry.addData("VERTS Current Position:", currentPosition);
         telemetry.addData("VERTS Target Stick", gamepad2.right_stick_y);

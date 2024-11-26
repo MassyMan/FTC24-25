@@ -38,6 +38,7 @@ public class AUTOLeft4 extends LinearOpMode {
     public class SlideLift {
         private DcMotorEx vertL;
         private DcMotorEx vertR;
+        private DcMotorEx extendoEncoder;
         private double targetPosition = 0;
 
         public SlideLift(HardwareMap hardwareMap) {
@@ -54,6 +55,13 @@ public class AUTOLeft4 extends LinearOpMode {
             vertR.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             vertL.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
             vertR.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
+
+
+            extendoEncoder = hardwareMap.get(DcMotorEx.class, "rightBack");
+            extendoEncoder = hardwareMap.get(DcMotorEx.class, "rightBack");
+            extendoEncoder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            extendoEncoder.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         public void moveSlides(double targetTicks) {
