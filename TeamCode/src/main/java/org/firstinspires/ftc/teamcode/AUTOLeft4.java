@@ -32,7 +32,7 @@ public class AUTOLeft4 extends LinearOpMode {
     public static double kF = 0.2;
     public static final int THRESHOLD = 80;
     private static final int MAX_TICKS = 3900;
-    private static final double HOLD_POWER = 0.1;
+    private static final double HOLD_POWER = 0.15;
     private static final double MIN_DOWN_POWER = -0.90;
 
     public class SlideLift {
