@@ -30,9 +30,9 @@ public class Teleop extends OpMode {
     private static final double MAX_EXTENDO = 16500;
 
     // V4Bar position limits
-    private static final double V4BAR_MIN_POSITION = 0.3;
-    private static final double V4BAR_MAX_POSITION = 0.95;
-    private double v4BarPosition = 0.3; // V4Bar Assumption starting position (will travel to after being moved)
+    private static final double V4BAR_MIN_POSITION = 0.24;
+    private static final double V4BAR_MAX_POSITION = 0.8;
+    private double v4BarPosition = 0.2; // V4Bar Assumption starting position (will travel to after being moved)
     private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
 
     @Override
@@ -101,7 +101,7 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad2.left_stick_y > 0) {
-            if (currentExtendo > 1000) {
+            if (currentExtendo > 400) {
                 slidL.setPower(-gamepad2.left_stick_y);
                 slidR.setPower(gamepad2.left_stick_y);
             } else {
@@ -127,8 +127,8 @@ public class Teleop extends OpMode {
             intake.setPower(-1.0); // Intake
             intake2.setPower(1.0); // Intake2 in the opposite direction
         } else if (gamepad2.left_trigger > 0.1) {
-            intake.setPower(0.2); // Outtake
-            intake2.setPower(-0.2); // Intake2 in the opposite direction
+            intake.setPower(0.4); // Outtake
+            intake2.setPower(-0.4); // Intake2 in the opposite direction
         } else {
             intake.setPower(0);
             intake2.setPower(0);
@@ -136,15 +136,15 @@ public class Teleop extends OpMode {
 
         // v4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
-            v4BarPosition -= 0.014;
+            v4BarPosition -= 0.025;
             v4BarMoved = true;
         } else if (gamepad2.right_trigger > 0.1) {
-            v4BarPosition += 0.014;
+            v4BarPosition += 0.025;
             v4BarMoved = true;
         }
 
         if (gamepad2.dpad_left) {
-            v4BarPosition = 0.51;
+            v4BarPosition = 0.43;
         }
 
         v4BarPosition = Range.clip(v4BarPosition, V4BAR_MIN_POSITION, V4BAR_MAX_POSITION);
@@ -153,7 +153,7 @@ public class Teleop extends OpMode {
         }
 
         if (gamepad2.dpad_up) {
-            v4BarPosition = 0.33;
+            v4BarPosition = 0.27;
         }
 
         // Get the current position of the vertical slide motor (vertL)
@@ -172,16 +172,16 @@ public class Teleop extends OpMode {
                 vertR.setPower(0);
             }
         } else if (gamepad2.right_stick_y > 0) { // if lowering slides
-            if (currentPosition < 200) { // If near the bottom, apply no power
+            if (currentPosition < 150) { // If near the bottom, apply no power
                 vertL.setPower(0);
                 vertR.setPower(0);
             } else {
                 // Slow down effect when lowering
                 // Gradual deceleration as the slides approach the bottom
-                if (currentPosition > 800) {  // If the position is higher than the lower threshold
+                if (currentPosition > 600) {  // If the position is higher than the lower threshold
                     powerScale = 1.0; // Full speed initially
                 } else {
-                    powerScale = (currentPosition - 800) / 800.0; // Slow down as we approach the bottom
+                    powerScale = (currentPosition - 600) / 600.0; // Slow down as we approach the bottom
                     powerScale = Math.max(powerScale, 0.1); // Ensure it doesn't get too fast at the bottom
                 }
 
@@ -193,7 +193,7 @@ public class Teleop extends OpMode {
                 // Hold position at a reasonable threshold if the stick is released
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
-            } else if (currentPosition <= 200) {
+            } else if (currentPosition <= 150) {
                 // Apply no power if near the bottom to save battery
                 vertL.setPower(0);
                 vertR.setPower(0);
@@ -202,6 +202,10 @@ public class Teleop extends OpMode {
                 vertL.setPower(0.1);
                 vertR.setPower(-0.1);
             }
+        }
+        if (currentPosition < 0) {
+            vertL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            vertL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
 

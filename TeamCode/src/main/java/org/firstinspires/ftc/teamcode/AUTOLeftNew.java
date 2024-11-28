@@ -19,6 +19,8 @@ import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import java.util.Vector;
+
 @Config
 @Autonomous(name = "LEFT NEW", group = "Autonomous")
 public class AUTOLeftNew extends LinearOpMode {
@@ -36,7 +38,6 @@ public class AUTOLeftNew extends LinearOpMode {
     private static final double MIN_DOWN_POWER = -0.90;
     private static final int MAX_TICKS = 3830;
     private static final double MAX_EXTENDO = 16500;
-
 
     public class ExtendoMove {
         private DcMotor extendoEncoder;
@@ -62,7 +63,6 @@ public class AUTOLeftNew extends LinearOpMode {
                 slidL.setPower(-1.0);
                 slidR.setPower(1.0);
             }
-
         }
 
         public boolean extendoAtTarget() {
@@ -83,7 +83,7 @@ public class AUTOLeftNew extends LinearOpMode {
         public boolean run(TelemetryPacket packet) {
             extendoMove.moveExtendo(targetExtendo);
             boolean extendoAtTarget = extendoMove.extendoAtTarget();
-            if (extendoAtTarget){
+            if (extendoAtTarget) {
                 slidL.setPower(0);
                 slidR.setPower(0);
             }
@@ -96,7 +96,7 @@ public class AUTOLeftNew extends LinearOpMode {
     public class SlideLift {
         private DcMotorEx vertL;
         private DcMotorEx vertR;
-        private DcMotorEx extendoEncoder;
+
         private double targetPosition = 0;
 
         public SlideLift(HardwareMap hardwareMap) {
@@ -113,13 +113,6 @@ public class AUTOLeftNew extends LinearOpMode {
             vertR.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             vertL.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
             vertR.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-
-
-
-            extendoEncoder = hardwareMap.get(DcMotorEx.class, "rightBack");
-            extendoEncoder = hardwareMap.get(DcMotorEx.class, "rightBack");
-            extendoEncoder.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-            extendoEncoder.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         public void moveSlides(double targetTicks) {
@@ -133,33 +126,23 @@ public class AUTOLeftNew extends LinearOpMode {
                 power = Math.max(power, MIN_DOWN_POWER);
             }
 
-
-
-            // If the target position is zero and slides are below 100 ticks, stop the motors
-            if ((currentPosition <= 150) && (power < 0) && targetPosition <= 101) {
+            if ((currentPosition <= 100) && (power < 0) && targetPosition == 0) {
                 vertL.setPower(0);
                 vertR.setPower(0);
+                power = 0;
                 telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
                 telemetry.update();
-                return;
             }
 
-            // Set motor power
             vertL.setPower(power);
             vertR.setPower(power);
 
-            // Check if within the threshold for holding power at non-zero targets
-            if (Math.abs(error) <= THRESHOLD + 50 && targetPosition != 0) {
+            if (Math.abs(error) <= THRESHOLD && targetPosition != 0) {
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(HOLD_POWER);
                 telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
                 telemetry.update();
-                return;
             }
-
-
-
-
 
             telemetry.addData("Slide Lift", "Target Position: %d", (int) targetPosition);
             telemetry.addData("Current Position", currentPosition);
@@ -169,9 +152,13 @@ public class AUTOLeftNew extends LinearOpMode {
             telemetry.update();
         }
 
+        public void stopSlides() {
+            vertL.setPower(0);
+            vertR.setPower(0);
+        }
 
         public boolean isAtTarget() {
-            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD + 30; // +10 to fix back out glitch
+            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD;
         }
     }
 
@@ -188,27 +175,12 @@ public class AUTOLeftNew extends LinearOpMode {
         public boolean run(TelemetryPacket packet) {
             slideLift.moveSlides(targetTicks);
             boolean isAtTarget = slideLift.isAtTarget();
+            if (isAtTarget) {
+                slideLift.stopSlides();
+            }
             telemetry.addData("SlideLiftAction", "At Target: %b, Target Ticks: %.2f", isAtTarget, targetTicks);
             telemetry.update();
             return !isAtTarget;
-        }
-    }
-
-    public class V4BarAction implements Action {
-        private Servo v4Bar;
-        private double targetPosition;
-
-        public V4BarAction(Servo v4Bar, double targetPosition) {
-            this.v4Bar = v4Bar;
-            this.targetPosition = Range.clip(targetPosition, 0.0, 1.0);
-        }
-
-        @Override
-        public boolean run(TelemetryPacket packet) {
-            v4Bar.setPosition(targetPosition);
-            telemetry.addData("V4BarAction", "Target Position: %.2f", targetPosition);
-            telemetry.update();
-            return true; // Servo movement is instant; this always completes in one step
         }
     }
 
@@ -257,6 +229,24 @@ public class AUTOLeftNew extends LinearOpMode {
         }
     }
 
+    public class V4BarAction implements Action {
+        private Servo v4Bar;
+        private double position;
+
+        public V4BarAction(Servo v4Bar, double position) {
+            this.v4Bar = v4Bar;
+            this.position = position;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            v4Bar.setPosition(position);
+            telemetry.addData("V4Bar", "Moving to Position: %.2f", position);
+            telemetry.update();
+            return false;
+        }
+    }
+
     @Override
     public void runOpMode() {
         Pose2d startPose = new Pose2d(-9, -60, Math.toRadians(90));
@@ -270,36 +260,102 @@ public class AUTOLeftNew extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            // Actions
-            ExtendoAction extendoSample = new ExtendoAction(extendoMove, 10000);
-            ExtendoAction extendoRetract = new ExtendoAction(extendoMove, 0);
+            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 4000);
+            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1600);
+            SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
-            V4BarAction V4BarSpecimen = new V4BarAction(v4Bar, 0.33);
-            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.33);
-            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.94);
+            V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.25);
+            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.8);
 
-            IntakeSpinAction runIntake = new IntakeSpinAction(intake, intake2, 0.7, 3.0);
+            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 12000);
+            ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, 0);
 
-            SlideLiftAction slidesDeposit = new SlideLiftAction(slideLift, 3890);
-            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 1650);
-            SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 100);
-
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intake, intake2, -1, 1);
+            IntakeSpinAction OuttakeSample = new IntakeSpinAction(intake, intake2, 1, 0.3);
 
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen)
-                    .afterTime(0, V4BarSpecimen)
-                    .afterTime(1.5, slidesGround)
+                    .afterTime(1, slidesGround)
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(2.8, ExtendoIntake)
+                    .afterTime(2.5, V4BarGround)
+                    .afterTime(3.2, IntakeSample)
                     .strafeTo(new Vector2d(-9, -31),
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
+                    .strafeTo(new Vector2d(-9, -41))
+                    .strafeToLinearHeading(new Vector2d(-37, -45), Math.toRadians(125),
+                            new TranslationalVelConstraint(90),
+                            new ProfileAccelConstraint(-90, 90))
 
                     .build());
 
-
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-9, -31, Math.toRadians(90)))
-                    .strafeTo(new Vector2d(-16, -45))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-37, -45, Math.toRadians(125)))
+                    .afterTime(0, slidesDeposit)
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(0, ExtendoRetract)
+                    .afterTime(2.2, OuttakeSample)
+                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(235),
+                        new TranslationalVelConstraint(30),
+                        new ProfileAccelConstraint(-30, 30))
                     .build());
-            // Add actions here as per your sequence, like moving the slides, V4Bar, etc.
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(235)))
+                    .afterTime(0, slidesGround)
+                    .afterTime(1.2, V4BarGround)
+                    .afterTime(2, IntakeSample)
+                    .strafeToLinearHeading(new Vector2d(-59, -40), Math.toRadians(90),
+                            new TranslationalVelConstraint(10),
+                            new ProfileAccelConstraint(-10, 10))
+                    .strafeTo(new Vector2d(-59, -30))
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-59, -31, Math.toRadians(90)))
+                    .afterTime(0, slidesDeposit)
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(2.5, OuttakeSample)
+                    .setReversed(true)
+                    .strafeToLinearHeading(new Vector2d(-42, -42), Math.toRadians(235),
+                            new TranslationalVelConstraint(34),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeTo(new Vector2d(-54, -54),
+                            new TranslationalVelConstraint(20),
+                            new ProfileAccelConstraint(-20, 20))
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(235)))
+                    .afterTime(0, slidesGround)
+                    .afterTime(0.75, V4BarGround)
+                    .afterTime(0.5, ExtendoIntake)
+                    .strafeToLinearHeading(new Vector2d(-52, -48), Math.toRadians(125),
+                            new TranslationalVelConstraint(20),
+                            new ProfileAccelConstraint(-20, 20))
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-52, -48, Math.toRadians(125)))
+                    .afterTime(0, IntakeSample)
+                    .afterTime(0.75, ExtendoRetract)
+                    .afterTime(1.5, V4BarDeposit)
+                    .afterTime(2, slidesDeposit)
+                    .strafeTo(new Vector2d(-52, -43),
+                            new TranslationalVelConstraint(10),
+                            new ProfileAccelConstraint(-10, 10))
+                    .strafeToLinearHeading(new Vector2d(-54, -54), Math.toRadians(235),
+                            new TranslationalVelConstraint(20),
+                            new ProfileAccelConstraint(-20, 20))
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -54, Math.toRadians(235)))
+                    .afterTime(0.2, slidesGround)
+                    .afterTime(0, OuttakeSample)
+
+                    .strafeToSplineHeading(new Vector2d(-50, -7), Math.toRadians(0),
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeTo(new Vector2d(-30, -7))
+                    .build());
+
+
         }
     }
 }
