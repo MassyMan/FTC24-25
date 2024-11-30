@@ -172,7 +172,7 @@ public class Teleop extends OpMode {
                 vertR.setPower(0);
             }
         } else if (gamepad2.right_stick_y > 0) { // if lowering slides
-            if (currentPosition < 150) { // If near the bottom, apply no power
+            if (currentPosition < 100) { // If near the bottom, apply no power
                 vertL.setPower(0);
                 vertR.setPower(0);
             } else {
@@ -193,7 +193,7 @@ public class Teleop extends OpMode {
                 // Hold position at a reasonable threshold if the stick is released
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
-            } else if (currentPosition <= 150) {
+            } else if (currentPosition <= 100) {
                 // Apply no power if near the bottom to save battery
                 vertL.setPower(0);
                 vertR.setPower(0);
