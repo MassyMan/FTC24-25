@@ -296,7 +296,7 @@ public class AUTORightSpecs extends LinearOpMode {
                     .afterTime(6.5, V4BarSpecimen)
                     .afterTime(6.5, ExtendoRetract)
                     .afterTime(8.0, OuttakeSample)
-                    .afterTime(8.7, IntakeSpecimen)
+                    .afterTime(8.5, IntakeSpecimen)
 
                     .strafeTo(new Vector2d(9, -32),
                             new TranslationalVelConstraint(55),
@@ -312,18 +312,18 @@ public class AUTORightSpecs extends LinearOpMode {
                             new TranslationalVelConstraint(80),
                             new ProfileAccelConstraint(-80, 80))
                     .strafeTo(new Vector2d(58.5, -36),
-                            new TranslationalVelConstraint(30),
-                            new ProfileAccelConstraint(-30, 30))
+                            new TranslationalVelConstraint(10),
+                            new ProfileAccelConstraint(-10, 10))
                     .strafeToLinearHeading(new Vector2d(48, -43), Math.toRadians(270),
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
-                    .strafeTo(new Vector2d(48, -55.5),
+                    .strafeTo(new Vector2d(48, -55),
                             new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-20, 20))
 
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(48, -55.5, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(48, -55, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.5, V4BarDeposit)
                     .afterTime(3.5, slidesGround)
@@ -343,12 +343,12 @@ public class AUTORightSpecs extends LinearOpMode {
                     .strafeToLinearHeading(new Vector2d(43, -46), Math.toRadians(270),
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
-                    .strafeTo(new Vector2d(43, -55.5),
+                    .strafeTo(new Vector2d(43, -55),
                             new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-20, 20))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(43, -55.5, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(43, -55, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.5, V4BarDeposit)
                     .afterTime(3.5, slidesGround)
@@ -368,12 +368,12 @@ public class AUTORightSpecs extends LinearOpMode {
                     .strafeToLinearHeading(new Vector2d(43, -46), Math.toRadians(270),
                             new TranslationalVelConstraint(70),
                             new ProfileAccelConstraint(-70, 70))
-                    .strafeTo(new Vector2d(43, -55.5),
+                    .strafeTo(new Vector2d(43, -55),
                             new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-20, 20))
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(43, -55.5, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(43, -55, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.5, V4BarDeposit)
                     .afterTime(3.5, slidesGround)

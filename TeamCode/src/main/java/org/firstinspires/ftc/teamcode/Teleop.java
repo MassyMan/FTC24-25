@@ -24,7 +24,7 @@ public class Teleop extends OpMode {
     // Vertical slide motors
     private DcMotor vertL, vertR;
 
-    private static final int MAX_TICKS = 3800;
+    private static final int MAX_TICKS = 3880;
     private static final double HOLD_POWER = 0.15;
 
     private static final double MAX_EXTENDO = 16500;
@@ -136,10 +136,10 @@ public class Teleop extends OpMode {
 
         // v4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
-            v4BarPosition -= 0.025;
+            v4BarPosition -= 0.02;
             v4BarMoved = true;
         } else if (gamepad2.right_trigger > 0.1) {
-            v4BarPosition += 0.025;
+            v4BarPosition += 0.02;
             v4BarMoved = true;
         }
 
@@ -172,7 +172,7 @@ public class Teleop extends OpMode {
                 vertR.setPower(0);
             }
         } else if (gamepad2.right_stick_y > 0) { // if lowering slides
-            if (currentPosition < 100) { // If near the bottom, apply no power
+            if (currentPosition < 50) { // If near the bottom, apply no power
                 vertL.setPower(0);
                 vertR.setPower(0);
             } else {
@@ -193,7 +193,7 @@ public class Teleop extends OpMode {
                 // Hold position at a reasonable threshold if the stick is released
                 vertL.setPower(HOLD_POWER);
                 vertR.setPower(-HOLD_POWER);
-            } else if (currentPosition <= 100) {
+            } else if (currentPosition <= 50) {
                 // Apply no power if near the bottom to save battery
                 vertL.setPower(0);
                 vertR.setPower(0);
@@ -211,8 +211,8 @@ public class Teleop extends OpMode {
 
         // Other controls for vertical slides and v4Bar
         if (gamepad2.dpad_right) {
-            vertL.setPower(-0.06);
-            vertR.setPower(0.06);
+            vertL.setPower(-0.1);
+            vertR.setPower(0.1);
         }
 
         if (gamepad2.dpad_down) {
