@@ -269,7 +269,7 @@ public class AUTOLeft4 extends LinearOpMode {
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, 0);
 
             IntakeSpinAction IntakeSample = new IntakeSpinAction(intake, intake2, -1, 1);
-            IntakeSpinAction OuttakeSample = new IntakeSpinAction(intake, intake2, 1, 0.3);
+            IntakeSpinAction OuttakeSample = new IntakeSpinAction(intake, intake2, 0.5, 0.3);
 
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen)

@@ -133,7 +133,7 @@ public class Teleop extends OpMode {
             intake.setPower(0);
             intake2.setPower(0);
         }
-
+    if (currentExtendo <= 14000) {
         // v4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
             v4BarPosition -= 0.02;
@@ -155,6 +155,7 @@ public class Teleop extends OpMode {
         if (gamepad2.dpad_up) {
             v4BarPosition = 0.27;
         }
+    }
 
         // Get the current position of the vertical slide motor (vertL)
         int currentPosition = vertL.getCurrentPosition();
