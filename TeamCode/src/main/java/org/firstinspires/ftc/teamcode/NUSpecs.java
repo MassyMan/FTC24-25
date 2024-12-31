@@ -264,7 +264,7 @@ public class NUSpecs extends LinearOpMode {
 
         slideLift = new SlideLift(hardwareMap);
         extendoMove = new ExtendoMove(hardwareMap);
-        v4Bar = hardwareMap.get(Servo.class, "v4Bar");
+        v4Bar = hardwareMap.get(Servo.class, "V4Bar");
         intakeL = hardwareMap.get(CRServo.class, "intakeL");
         intakeR = hardwareMap.get(CRServo.class, "intakeR");
 

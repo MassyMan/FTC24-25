@@ -1,60 +1,152 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Time;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Twist2dDual;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.util.Range;
-import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.hardware.Servo;
 
 @Autonomous(name = "Diddy Party Auto")
 public class DiddyPartyAuto extends LinearOpMode {
 
     ThreeDeadWheelLocalizer localizer;
     Pose2d pose;
+    ElapsedTime elapsedTime;
+
+    // Initialize Variables
+    double targetX = 0;
+    double targetY = 0;
+    double targetT = 0;
+    double currentX = 0;
+    double currentY = 0;
+    double currentT = 0;
+    double errorX = 0;
+    double errorY = 0;
+    double errorT = 0;
+    double lastErrorX = 0;
+    double lastErrorY = 0;
+    double lastErrorT = 0;
+    // x/y/t/ for drivetrain math [NOT DRIVETRAIN POSITION]
+    double x = 0;
+    double y = 0;
+    double t = 0;
+    double xKP = 0;
+    double xKD = 0;
+    double yKP = 0;
+    double yKD = 0;
+    double tKP = 0;
+    double tKD = 0;
+    double x_rotated = 0;
+    double y_rotated = 0;
+
+    // Initialize Motors
+    DcMotor leftFront, leftBack, rightBack, rightFront;
+    DcMotor vertL, vertR;
+    DcMotor wormL, wormR;
+
+    // Initialize Servos
+    DcMotor extendoEncoder; // REV Robotics through-bore encoder attached to horizontal extension
+    CRServo slidL, slidR;
+    Servo V4Bar, intakeL, intakeR;
+
+    // ===============================================================================
+
+    public void calculatePID(){
+        // Fetch current pose
+        Twist2dDual<Time> twist = localizer.update();
+        pose = pose.plus(twist.value());
+
+        // Update current position variables
+        currentX = pose.position.x;
+        currentY = pose.position.y;
+        currentT = pose.heading.toDouble();
+        // Calculate error
+        errorX = currentX - targetX;
+        errorY = currentY - targetY;
+        errorT = currentT - Math.toRadians(targetT);
+        // Run PID algorithm based on error
+        x = (errorX * xKP) + (((errorX - lastErrorX) / elapsedTime.seconds()) * xKD);
+        y = (errorY * yKP) + (((errorY - lastErrorY) / elapsedTime.seconds()) * yKD);
+        t = (errorT * tKP) + (((errorT - lastErrorT) / elapsedTime.seconds()) * tKD);
+        // Reset Timer
+        elapsedTime.reset();
+    }
+
+    public void pidToPoint(double xPos, double yPos, double heading, double moveSpeed, double tolerance, long waitTime) {
+        // Register target positions
+        targetX = xPos;
+        targetY = yPos;
+        targetT = heading; // in degrees
+
+        // While the error is larger than the tolerance
+        while (errorX + errorY > tolerance) {
+            // Run PID algorithm
+            calculatePID();
+
+            // Rotate powers to be field centric
+            x_rotated = x * Math.cos(currentT) - y * Math.sin(currentT);
+            y_rotated = x * Math.sin(currentT) + y * Math.cos(currentT);
+
+            // Apply motor powers
+            leftFront.setPower((x_rotated + y_rotated + t) * (moveSpeed / 100));
+            leftBack.setPower((x_rotated - y_rotated + t) * (moveSpeed / 100));
+            rightFront.setPower((x_rotated - y_rotated - t) * (moveSpeed / 100));
+            rightBack.setPower((x_rotated + y_rotated - t) * (moveSpeed / 100));
+        }
+    }
+
+    public void moveSlides(double targetPos, double moveSpeed, boolean holdPosition){
+
+    }
+
+    public void moveExtendo(double targetPos, double moveSpeed){
+
+    }
+
+    // ===============================================================================
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // initialize localizer
+        // Initialize Drivetrain
+        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
+        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        // Initialize Vertical Slides
+        vertL = hardwareMap.get(DcMotor.class, "vertL");
+        vertR = hardwareMap.get(DcMotor.class, "vertR");
+
+        // Initialize Horizontal Slides
+        extendoEncoder = hardwareMap.get(DcMotorEx.class, "vertR"); // Rev through-bore encoder plugged into vertR
+        extendoEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        slidL = hardwareMap.get(CRServo.class, "slidL");
+        slidR = hardwareMap.get(CRServo.class, "slidR");
+        V4Bar = hardwareMap.get(Servo.class, "v4Bar");
+        intakeL = hardwareMap.get(Servo.class, "intakeL");
+        intakeR = hardwareMap.get(Servo.class, "intakeR");
+
+
+        // Initialize Hang
+        wormL = hardwareMap.get(DcMotor.class, "wormL");
+        wormR = hardwareMap.get(DcMotor.class, "wormR");
+
+
+        // Initialize RR1.0 Localizer
         localizer = new ThreeDeadWheelLocalizer(hardwareMap, 0.0019547157517511);
-
-        // initialize variables
-        double targetX = 0;
-        double targetY = 0;
-        double targetT = 0;
-        double errorX = 0;
-        double errorY = 0;
-        double errorT = 0;
-        double lastErrorX = 0;
-        double lastErrorY = 0;
-        double lastErrorT = 0;
-        double xInput = 0;
-        double yInput = 0;
-        double tInput = 0;
-        double xKP = 0;
-        double xKD = 0;
-        double yKP = 0;
-        double yKD = 0;
-        double tKP = 0;
-        double tKD = 0;
-
-        ElapsedTime elapsedTime;
 
         // Wait until program is started
         waitForStart();
@@ -62,25 +154,19 @@ public class DiddyPartyAuto extends LinearOpMode {
         // STARTING POSITION
         Pose2d pose = new Pose2d(0, 0, Math.toRadians(90));
 
-        elapsedTime = new ElapsedTime();
-
         // Loop
         while (opModeIsActive()) {
 
-            double currentX = pose.position.x;
-            double currentY = pose.position.y;
-            double currentT = pose.heading.toDouble();
 
-            Twist2dDual<Time> twist = localizer.update();
-            pose = pose.plus(twist.value());
-
-            telemetry.addData("Pose X", currentX);
-            telemetry.addData("Pose Y", currentY);
-            telemetry.addData("Heading", currentT);
-            telemetry.addData("Loop Time", elapsedTime.seconds());
+            telemetry.addData("Running DiddyPartyAuto", "");
             telemetry.update();
 
-            elapsedTime.reset();
+
+            pidToPoint(-10, -10, 50, 100, 3, 0);
+
+            break;
+
+
         }
 
 

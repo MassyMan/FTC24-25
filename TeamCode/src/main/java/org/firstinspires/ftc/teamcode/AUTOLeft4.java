@@ -252,7 +252,7 @@ public class AUTOLeft4 extends LinearOpMode {
 
         slideLift = new SlideLift(hardwareMap);
         extendoMove = new ExtendoMove(hardwareMap);
-        v4Bar = hardwareMap.get(Servo.class, "v4Bar");
+        v4Bar = hardwareMap.get(Servo.class, "V4Bar");
         intake = hardwareMap.get(CRServo.class, "intake");
         intake2 = hardwareMap.get(CRServo.class, "intake2");
 

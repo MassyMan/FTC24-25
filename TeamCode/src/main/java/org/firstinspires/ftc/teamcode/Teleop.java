@@ -18,7 +18,7 @@ public class Teleop extends OpMode {
     // CRServos for slide control
     private CRServo slidL, slidR;
 
-    // Servo and CRServos for intake and v4Bar control
+    // Servo and CRServos for intake and V4Bar control
     private Servo v4Bar;
     private CRServo intakeL, intakeR;
 
@@ -41,7 +41,7 @@ public class Teleop extends OpMode {
     private static final double INTAKE_SPEED = 1.0;
 
     private double v4BarPosition = 0.2; // V4Bar Assumption starting position (will travel to after being moved)
-    private boolean v4BarMoved = false; // Flag to check if v4Bar has been moved
+    private boolean v4BarMoved = false; // Flag to check if V4Bar has been moved
 
     private ElapsedTime ElapsedTime;
 
@@ -66,8 +66,8 @@ public class Teleop extends OpMode {
         slidL = hardwareMap.get(CRServo.class, "slidL");
         slidR = hardwareMap.get(CRServo.class, "slidR");
 
-        // Initialize servos for v4Bar and intake
-        v4Bar = hardwareMap.get(Servo.class, "v4Bar");
+        // Initialize servos for V4Bar and intake
+        v4Bar = hardwareMap.get(Servo.class, "V4Bar");
         intakeL = hardwareMap.get(CRServo.class, "intakeL");
         intakeR = hardwareMap.get(CRServo.class, "intakeR");
 
@@ -152,7 +152,7 @@ public class Teleop extends OpMode {
             intakeR.setPower(0);
         }
     if (currentExtendo <= 14000) {
-        // v4Bar control (only moves after initial command)
+        // V4Bar control (only moves after initial command)
         if (gamepad2.right_bumper) {
             v4BarPosition -= 0.01;
             v4BarMoved = true;
@@ -188,7 +188,7 @@ public class Teleop extends OpMode {
         }
 
 
-        // Other controls for vertical slides and v4Bar
+        // Other controls for vertical slides and V4Bar
         if (gamepad2.dpad_right) {
             vertL.setPower(-0.1);
             vertR.setPower(0.1);
