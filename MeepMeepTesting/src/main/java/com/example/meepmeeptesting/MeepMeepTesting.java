@@ -21,9 +21,23 @@ public class MeepMeepTesting {
 
                         .setTangent(-11)
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(36, -25, Math.toRadians(90)), -11)
-                        .setTangent(-4)
-                        .splineToLinearHeading(new Pose2d(49, -11, Math.toRadians(90)), -11)
+                        .splineToConstantHeading(new Vector2d(38, -29), -11)
+                        .splineToConstantHeading(new Vector2d(38, -11), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(42, -11), -1)
+                        .splineToConstantHeading(new Vector2d(42, -55), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(45, -11), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(58, -11), -11)
+                        .splineToConstantHeading(new Vector2d(58, -55), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(58, -11), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(62, -11), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(62, -55), Math.PI / 2)
+                        .setReversed(true)
+                        .splineToLinearHeading(new Pose2d(40, -45, Math.toRadians(270)), Math.PI / 2)
+                        .strafeTo(new Vector2d(40, -55))
+
+                        .splineToLinearHeading(new Pose2d(7, -33, Math.toRadians(90)), Math.PI / 2)
+
+
 
                         .build());
 
