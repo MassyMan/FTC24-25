@@ -26,8 +26,9 @@ public class Teleop extends OpMode {
     // worm drive motors
     private DcMotor wormL, wormR;
 
-    private static final double HOLD_POWER = 0.15;
-    private static final double SPECIMEN_VERT = 1200;
+    private static final double HOLD_POWER = 0.25;
+    private static final double SPECIMEN_VERT = 640;
+    private static final double VERT_MAX_TICKS = 1950;
 
     private static final double MIN_EXTENDO = 1500;
     private static final double MAX_EXTENDO = 15300;
@@ -206,19 +207,31 @@ public class Teleop extends OpMode {
 
         if (!holdVertsIn) {
 // Vertical slide control with slow-down effect when lowering
-            vertL.setPower(-gamepad2.right_stick_y); // Set motor power based on joystick input
-            vertR.setPower(gamepad2.right_stick_y);
-
+            if (gamepad2.right_stick_y < 0) {
+                if (currentVertPosition < VERT_MAX_TICKS) {
+                    vertL.setPower(-gamepad2.right_stick_y);
+                    vertR.setPower(gamepad2.right_stick_y);
+                } else {
+                    vertL.setPower(HOLD_POWER);
+                    vertR.setPower(-HOLD_POWER);
+                }
+            } else if (gamepad2.right_stick_y > 0) {
+                vertL.setPower(-gamepad2.right_stick_y);
+                vertR.setPower(gamepad2.right_stick_y);
+            }
             if (currentVertPosition < 0) {
                 vertL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 vertL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            } else if (currentVertPosition > 400 && gamepad2.right_stick_y == 0) {
+                vertL.setPower(HOLD_POWER);
+                vertR.setPower(-HOLD_POWER);
             }
 
 
             // Other controls for vertical slides and V4Bar
             if (gamepad2.dpad_right) {
-                vertL.setPower(-0.1);
-                vertR.setPower(0.1);
+                vertL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                vertL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             }
 
             if (gamepad2.dpad_down) {
@@ -333,6 +346,9 @@ public class Teleop extends OpMode {
         telemetry.addData("EXTENDO POSITION:", currentExtendo);
         telemetry.addData("VERT SLIDE POSITION:", currentVertPosition);
         telemetry.addData("V4BAR POSITION:", v4Bar.getPosition());
+        telemetry.addLine();
+        telemetry.addData("VERTL POWER:", vertL.getPower());
+        telemetry.addData("VERTR POWER:", vertR.getPower());
         telemetry.addLine();
         telemetry.addData("HANG POSITION:", hangArmPos);
         telemetry.addData("HANG STATE:", HANGARMS_STATE);
