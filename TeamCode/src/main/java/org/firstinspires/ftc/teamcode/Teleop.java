@@ -117,8 +117,8 @@ public class Teleop extends OpMode {
         // Mecanum drive control
 
         double drive = -gamepad1.left_stick_y;
-        double strafe = gamepad1.left_stick_x * 1.5;
-        double rotate = gamepad1.right_stick_x;
+        double strafe = gamepad1.left_stick_x * 1.3;
+        double rotate = gamepad1.right_stick_x * 1.3;
         double speedMultiplier = gamepad1.right_trigger > 0.1 ? 0.3 : 1.0;
 
         leftFront.setPower(Range.clip((drive + strafe + rotate) * speedMultiplier, -1.0, 1.0));
@@ -218,6 +218,9 @@ public class Teleop extends OpMode {
             } else if (gamepad2.right_stick_y > 0) {
                 vertL.setPower(-gamepad2.right_stick_y);
                 vertR.setPower(gamepad2.right_stick_y);
+            } else if (gamepad2.right_stick_y == 0) {
+                vertL.setPower(0);
+                vertR.setPower(0);
             }
             if (currentVertPosition < 0) {
                 vertL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -258,7 +261,7 @@ public class Teleop extends OpMode {
             wormL.setPower(-1.0);
             wormR.setPower(-1.0);
         } else if (gamepad1.dpad_left){
-            if (hangArmPos > 30) {
+            if (hangArmPos > 0) {
                 wormL.setPower(-0.4);
                 wormR.setPower(-0.4);
             } else {
