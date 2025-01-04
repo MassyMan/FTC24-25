@@ -107,7 +107,6 @@ public class Teleop extends OpMode {
         wormL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         wormR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         wormR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         // Initialize encoder and previous voltage
         // Analog encoder for slidL [extendo]
     }

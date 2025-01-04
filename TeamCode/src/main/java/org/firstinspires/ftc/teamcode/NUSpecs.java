@@ -293,7 +293,7 @@ public class NUSpecs extends LinearOpMode {
                     .afterTime(0, V4BarDeposit)
                     .afterTime(2, ExtendoIntake)
                     .afterTime(2, IntakeSample)
-                    .afterTime(2, V4BarGround)
+                    .afterTime(2, V4BarSpecimen)
 
                     // Scoring 1st Specimen
                     .strafeToLinearHeading(new Vector2d(4, -32), Math.toRadians(90),
