@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-
 @TeleOp
 public class RobotSetup extends LinearOpMode {
 
@@ -18,7 +17,7 @@ public class RobotSetup extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         // Determine AUTONOMOUS Type
-        while (!advance && opModeInInit()) {
+        while (!advance && opModeIsActive()) {
             telemetry.addData("Press INIT To Begin RobotSetup.java", "");
             telemetry.addData("USE GAMEPAD 1 [BLUE] To Select Autonomous Type", "");
             telemetry.addLine();
@@ -41,15 +40,16 @@ public class RobotSetup extends LinearOpMode {
             }
         }
 
+        advance = false;  // Reset advance after selection
+        telemetry.clearAll();
 
-
-        if (autoType.equals("SPECIMEN")){ // ============================================ SPECIMEN AUTO
+        if (autoType.equals("SPECIMEN")) { // SPECIMEN AUTO
             // Reset variables for next selection
             advance = false;
             telemetry.clearAll();
 
             // Determine Park Orientation
-            while (!advance && opModeInInit()) {
+            while (!advance && opModeIsActive()) {
                 telemetry.addLine("SELECT DESIRED PARK ORIENTATION");
                 telemetry.addLine("LEFT ---> FLOAT [DIAGONAL]");
                 telemetry.addLine("RIGHT --> PERPENDICULAR [FACING OTHER ALLIANCE]");
@@ -57,19 +57,19 @@ public class RobotSetup extends LinearOpMode {
                 telemetry.addLine("DOWN ---> NO PARK");
                 telemetry.update();
 
-                if (gamepad1.dpad_left){
+                if (gamepad1.dpad_left) {
                     parkLocation = "FLOAT";
                     advance = true;
                 }
-                if (gamepad1.dpad_right){
+                if (gamepad1.dpad_right) {
                     parkLocation = "PERPENDICULAR";
                     advance = true;
                 }
-                if (gamepad1.dpad_up){
+                if (gamepad1.dpad_up) {
                     parkLocation = "SPECIMEN";
                     advance = true;
                 }
-                if (gamepad1.dpad_down){
+                if (gamepad1.dpad_down) {
                     advance = true;
                 }
             }
@@ -78,10 +78,10 @@ public class RobotSetup extends LinearOpMode {
             advance = false;
             telemetry.clearAll();
 
-        } else if (autoType.equals("SAMPLE")){ // ==================================== SAMPLE AUTO
+        } else if (autoType.equals("SAMPLE")) { // SAMPLE AUTO
             // Reset variables for next selection
 
-            while (!advance && opModeInInit()) {
+            while (!advance && opModeIsActive()) {
                 telemetry.addLine("[SAMPLE AUTO] INPUT PRELOAD TYPE");
                 telemetry.addLine("LEFT ---> SAMPLE");
                 telemetry.addLine("RIGHT --> SPECIMEN");
@@ -90,19 +90,19 @@ public class RobotSetup extends LinearOpMode {
 
                 telemetry.update();
 
-                if (gamepad1.dpad_left){
+                if (gamepad1.dpad_left) {
                     preloadType = "SAMPLE";
                     advance = true;
                 }
-                if (gamepad1.dpad_right){
+                if (gamepad1.dpad_right) {
                     preloadType = "SPECIMEN";
                     advance = true;
                 }
-                if (gamepad1.dpad_up){
+                if (gamepad1.dpad_up) {
                     preloadType = "NONE";
                     advance = true;
                 }
-                if (gamepad1.dpad_down){
+                if (gamepad1.dpad_down) {
                     preloadType = "NONE";
                     advance = true;
                 }
@@ -111,7 +111,7 @@ public class RobotSetup extends LinearOpMode {
             advance = false;
             telemetry.clearAll();
 
-            while (!advance && opModeInInit()) {
+            while (!advance && opModeIsActive()) {
                 telemetry.addLine("GRAB 5th YELLOW SAMPLE?");
                 telemetry.addLine("LEFT ---> TRUE: DRIVE IN FRONT OF IDLE ROBOT");
                 telemetry.addLine("RIGHT --> FALSE");
@@ -119,25 +119,25 @@ public class RobotSetup extends LinearOpMode {
                 telemetry.addLine("DOWN ---> TRUE: DRIVE THROUGH BOTTOM ROW");
                 telemetry.update();
 
-                if (gamepad1.dpad_left){
+                if (gamepad1.dpad_left) {
                     sample5th = "DRIVETOP";
                     advance = true;
                 }
-                if (gamepad1.dpad_right){
+                if (gamepad1.dpad_right) {
                     sample5th = "FALSE";
                     advance = true;
                 }
-                if (gamepad1.dpad_up){
+                if (gamepad1.dpad_up) {
                     sample5th = "FROMOTHER";
                     advance = true;
                 }
-                if (gamepad1.dpad_down){
+                if (gamepad1.dpad_down) {
                     sample5th = "DRIVEBOTTOM";
                     advance = true;
                 }
             }
 
-            while (!advance && opModeInInit()) {
+            while (!advance && opModeIsActive()) {
                 telemetry.addLine("[SAMPLE AUTO] INPUT PARK LOCATION");
                 telemetry.addLine("LEFT ---> TOUCHING BAR");
                 telemetry.addLine("RIGHT --> NONE");
@@ -146,19 +146,19 @@ public class RobotSetup extends LinearOpMode {
 
                 telemetry.update();
 
-                if (gamepad1.dpad_left){
+                if (gamepad1.dpad_left) {
                     preloadType = "TOUCHING_BAR";
                     advance = true;
                 }
-                if (gamepad1.dpad_right){
+                if (gamepad1.dpad_right) {
                     preloadType = "NONE";
                     advance = true;
                 }
-                if (gamepad1.dpad_up){
+                if (gamepad1.dpad_up) {
                     preloadType = "NONE";
                     advance = true;
                 }
-                if (gamepad1.dpad_down){
+                if (gamepad1.dpad_down) {
                     preloadType = "NONE";
                     advance = true;
                 }
@@ -167,12 +167,10 @@ public class RobotSetup extends LinearOpMode {
             advance = false;
             telemetry.clearAll();
 
-        } else if (autoType.equals("PARK")){
+        } else if (autoType.equals("PARK")) {
             // TODO: ADD PARK AUTO CODE
         }
 
-
-
-
+        waitForStart();
     }
 }

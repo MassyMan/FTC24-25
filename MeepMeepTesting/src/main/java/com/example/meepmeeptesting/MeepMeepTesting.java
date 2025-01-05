@@ -10,32 +10,19 @@ import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 public class MeepMeepTesting {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
-        Pose2d startPose = new Pose2d(18, -60, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(10, -60, Math.toRadians(90));
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(startPose)
 
                         .setReversed(false)
-                        .splineToLinearHeading(new Pose2d(9, -33, Math.toRadians(90)), -11)
-
-                        .setTangent(-11)
+                        .splineToLinearHeading(new Pose2d(9, -33, Math.toRadians(90)), Math.PI / 2)
                         .setReversed(true)
-                        .splineToConstantHeading(new Vector2d(38, -29), -11)
-                        .splineToConstantHeading(new Vector2d(38, -11), Math.PI / 2)
-                        .splineToConstantHeading(new Vector2d(42, -11), -1)
-                        .splineToConstantHeading(new Vector2d(42, -55), Math.PI / 2)
-                        .splineToConstantHeading(new Vector2d(45, -11), Math.PI / 2)
-                        .splineToConstantHeading(new Vector2d(58, -11), -11)
-                        .splineToConstantHeading(new Vector2d(58, -55), Math.PI / 2)
-                        .splineToConstantHeading(new Vector2d(58, -11), Math.PI / 2)
-                        .splineToConstantHeading(new Vector2d(62, -11), Math.PI / 2)
-                        .splineToConstantHeading(new Vector2d(62, -55), Math.PI / 2)
+                        .splineToLinearHeading(new Pose2d(35, -48, Math.toRadians(45)), Math.PI / 2)
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(40, -45, Math.toRadians(270)), Math.PI / 2)
-                        .strafeTo(new Vector2d(40, -55))
+                        .splineToLinearHeading(new Pose2d(35, -36, Math.toRadians(45)), Math.PI / 2)
 
-                        .splineToLinearHeading(new Pose2d(7, -33, Math.toRadians(90)), Math.PI / 2)
 
 
 

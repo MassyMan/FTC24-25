@@ -31,7 +31,7 @@ public class NUSpecs extends LinearOpMode {
     private ExtendoMove extendoMove;
 
     // PIDF control variables
-    public static double kP = 0.05;
+    public static double kP = 0.08;
     public static double kF = 0.2;
     public static final int THRESHOLD = 80;
     private static final double HOLD_POWER = 0.15;
@@ -130,7 +130,7 @@ public class NUSpecs extends LinearOpMode {
                 power = Math.max(power, MIN_DOWN_POWER);
             }
 
-            if ((currentPosition <= 10) && (power < 0) && targetPosition == 0) {
+            if ((currentPosition <= 1) && (power < 0) && targetPosition == 0) {
                 stopSlides();
                 power = 0;
                 telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
@@ -170,7 +170,12 @@ public class NUSpecs extends LinearOpMode {
         }
 
         public boolean isAtTarget() {
-            return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD;
+            if (targetPosition != 0) {
+                return Math.abs(targetPosition - vertL.getCurrentPosition()) <= THRESHOLD;
+            } else {
+                return vertL.getCurrentPosition() <= 0;
+            }
+
         }
     }
 
@@ -278,12 +283,11 @@ public class NUSpecs extends LinearOpMode {
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.17);
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.72);
             V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.35);
-            V4BarAction V4BarSpecimen = new V4BarAction(v4Bar, 0.35);
 
-            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 15000);
+            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 1500);
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, 0);
 
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, -1, 1.5);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, -1, 1.8);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, -1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, 1.0, 0.2);
 
@@ -291,41 +295,42 @@ public class NUSpecs extends LinearOpMode {
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.8, slidesGround)
                     .afterTime(0, V4BarDeposit)
-                    .afterTime(2, ExtendoIntake)
-                    .afterTime(2, IntakeSample)
-                    .afterTime(2, V4BarSpecimen)
+                    .afterTime(1.8, ExtendoIntake)
+                    .afterTime(1.8, V4BarGround)
+                    .afterTime(2.5, IntakeSample)
+                    .afterTime(4.75, OuttakeSample)
+                    .afterTime(5.1, IntakeSample)
+                    .afterTime(7, V4BarHP)
+                    .afterTime(8.1, OuttakeSample)
+                    .afterTime(9, IntakeSpecimen)
+
 
                     // Scoring 1st Specimen
-                    .strafeToLinearHeading(new Vector2d(4, -32), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(10, -32), Math.toRadians(90),
                             new TranslationalVelConstraint(80),
                             new ProfileAccelConstraint(-80, 80))
-
-                    // Pushing 3 Samples into OBSERVATION ZONE
-                    .strafeToLinearHeading(new Vector2d(32, -40), Math.toRadians(45),
+                    .setReversed(true)
+                    .strafeToLinearHeading(new Vector2d(48.75, -40), Math.toRadians(90),
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-
-                    /*
-                    .splineToConstantHeading(new Vector2d(42, -11), Math.PI / 2)
-                    .splineToConstantHeading(new Vector2d(45, -11), -1)
-                    .splineToConstantHeading(new Vector2d(45, -40), Math.PI / 2)
-                    .splineToConstantHeading(new Vector2d(45, -11), Math.PI / 2)
-                    .splineToConstantHeading(new Vector2d(54, -11), -11)
-                    .splineToConstantHeading(new Vector2d(54, -40), Math.PI / 2)
-                    .splineToConstantHeading(new Vector2d(50, -11), Math.PI / 2)
-                    .splineToConstantHeading(new Vector2d(60, -11), Math.PI / 2)
-                    .splineToConstantHeading(new Vector2d(60, -45), Math.PI / 2)
-                    .strafeToLinearHeading(new Vector2d(40, -47), Math.toRadians(270),
+                    .strafeToLinearHeading(new Vector2d(48.75, -25), Math.toRadians(90),
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(30, -50), Math.toRadians(320),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(58, -40), Math.toRadians(90),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(58, -28), Math.toRadians(90),
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(58, -40), Math.toRadians(270),
                             new TranslationalVelConstraint(90),
                             new ProfileAccelConstraint(-90, 90))
-                    .setReversed(true)
-                    .strafeTo(new Vector2d(40, -55.5))
-                    .strafeToLinearHeading(new Vector2d(7, -38), Math.toRadians(90),
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
-
-                    */
-
+                    .strafeToLinearHeading(new Vector2d(45, -47), Math.toRadians(270),
+                            new TranslationalVelConstraint(50),
+                            new ProfileAccelConstraint(-50, 50))
                     .build());
 
 

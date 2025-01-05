@@ -261,8 +261,8 @@ public class AUTORightSpecs extends LinearOpMode {
         slideLift = new SlideLift(hardwareMap);
         extendoMove = new ExtendoMove(hardwareMap);
         v4Bar = hardwareMap.get(Servo.class, "V4Bar");
-        intake = hardwareMap.get(CRServo.class, "intake");
-        intake2 = hardwareMap.get(CRServo.class, "intake2");
+        intake = hardwareMap.get(CRServo.class, "intakeL");
+        intake2 = hardwareMap.get(CRServo.class, "intakeR");
 
         waitForStart();
         if (opModeIsActive()) {
