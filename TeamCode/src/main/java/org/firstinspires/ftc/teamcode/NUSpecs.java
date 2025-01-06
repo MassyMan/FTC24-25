@@ -297,9 +297,23 @@ public class NUSpecs extends LinearOpMode {
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.9, slidesGround)
                     .afterTime(0, V4BarDeposit)
-                    .afterTime(9, ExtendoRetract)
-                    .afterTime(9, V4BarHP)
-                    .afterTime(10, IntakeSpecimen)
+                    .afterTime(8, ExtendoRetract)
+                    .afterTime(8, V4BarHP)
+                    .afterTime(9.6, IntakeSpecimen) // +1.6 [Grabbing 2nd Specimen]
+                    .afterTime(10, slidesSpecimen) // +0.4
+                    .afterTime(10.5, V4BarDeposit) // +0.5
+                    .afterTime(12.2, slidesGround) // +1.7
+                    .afterTime(12.6, V4BarHP) // +0.4
+                    .afterTime(14.5, IntakeSpecimen) // +1.9 [Grabbing 3rd Specimen]
+                    .afterTime(14.9, slidesSpecimen) // +0.4
+                    .afterTime(15.4, V4BarDeposit) // +0.5
+                    .afterTime(16.85, slidesGround) // +1.35
+                    .afterTime(17.5, V4BarHP) // +0.4
+                    .afterTime(19.4, IntakeSpecimen) // +1.9 [Grabbing 3rd Specimen]
+                    .afterTime(19.6, slidesSpecimen) // +0.4
+                    .afterTime(20.3, V4BarDeposit) // +0.5
+                    .afterTime(21.85, slidesGround) // +1.35
+
                //     .afterTime(9, V4BarHP)
                 //    .afterTime(10, IntakeSpecimen)
                 //    .afterTime(10.25, slidesSpecimen)
@@ -388,33 +402,63 @@ public class NUSpecs extends LinearOpMode {
                             new TranslationalVelConstraint(70),
                             new ProfileAccelConstraint(-70, 70))
                     .setReversed(true)
-                    .strafeToLinearHeading(new Vector2d(35, -40), Math.toRadians(90), // WALL POSITION
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .strafeToLinearHeading(new Vector2d(35, -10), Math.toRadians(90), // WALL POSITION
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .strafeToLinearHeading(new Vector2d(45, -10), Math.toRadians(90), // WALL POSITION
+                    .strafeToLinearHeading(new Vector2d(35, -40), Math.toRadians(90),
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(45, -44), Math.toRadians(90), // WALL POSITION
+                    .strafeToLinearHeading(new Vector2d(35, -9), Math.toRadians(90),
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(45, -10), Math.toRadians(90), // WALL POSITION
+                    .strafeToLinearHeading(new Vector2d(45, -9), Math.toRadians(90),  // FIRST BLOCK POSITION
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(55, -10), Math.toRadians(90), // WALL POSITION
+                    .strafeToLinearHeading(new Vector2d(45, -44), Math.toRadians(90),
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(55, -44), Math.toRadians(90), // WALL POSITION
+                    .strafeToLinearHeading(new Vector2d(45, -9), Math.toRadians(90),
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(45, -45), Math.toRadians(270), // WALL POSITION
-                            new TranslationalVelConstraint(60),
-                            new ProfileAccelConstraint(-60, 60))
-                    .strafeToLinearHeading(new Vector2d(45, -51.5), Math.toRadians(270), // WALL POSITION
+                    .strafeToLinearHeading(new Vector2d(55, -9), Math.toRadians(90), // SECOND BLOCK POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(55, -44), Math.toRadians(90),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(45, -54), Math.toRadians(270), // WALL POSITION, GRABBING 2ND SPECIMEN
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(6, -35.8, Math.toRadians(90)), Math.PI / 2, // BAR POSITION, DEPOSITING 2ND SPECIMEN
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(45, -54), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(4, -35.8, Math.toRadians(90)), Math.PI / 2, // BAR POSITION, DEPOSITING 3RD SPECIMEN
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(45, -54), Math.toRadians(270), // WALL POSITION, GRABBING 4TH SPECIMEN
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(0, -34.8, Math.toRadians(90)), Math.PI / 2, // BAR POSITION, DEPOSITING 4TH SPECIMEN
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                            .waitSeconds(0.5)
+                    .strafeToLinearHeading(new Vector2d(55, -50), Math.toRadians(90),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
 
 
 
