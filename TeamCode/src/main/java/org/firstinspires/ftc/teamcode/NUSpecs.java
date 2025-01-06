@@ -19,6 +19,8 @@ import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.Autonomous.V4Bar;
+
 import java.util.Vector;
 
 @Config
@@ -40,7 +42,7 @@ public class NUSpecs extends LinearOpMode {
     private static final double MIN_EXTENDO = 0;
     private static final double MAX_EXTENDO = 15400;
     private static final double EXTENDO_SPEED = -0.5;
-    private static final double EXTENDO_TOLERANCE = 300;
+    private static final double EXTENDO_TOLERANCE = 200;
 
 
     public class ExtendoMove {
@@ -293,7 +295,15 @@ public class NUSpecs extends LinearOpMode {
 
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesSpecimen)
-                    .afterTime(0.8, slidesGround)
+                    .afterTime(0.9, slidesGround)
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(9, ExtendoRetract)
+                    .afterTime(9, V4BarHP)
+                    .afterTime(10, IntakeSpecimen)
+               //     .afterTime(9, V4BarHP)
+                //    .afterTime(10, IntakeSpecimen)
+                //    .afterTime(10.25, slidesSpecimen)
+                    /*
                     .afterTime(0, V4BarDeposit)
                     .afterTime(1.8, ExtendoIntake)
                     .afterTime(1.8, V4BarGround)
@@ -301,36 +311,154 @@ public class NUSpecs extends LinearOpMode {
                     .afterTime(4.75, OuttakeSample)
                     .afterTime(5.1, IntakeSample)
                     .afterTime(7, V4BarHP)
-                    .afterTime(8.1, OuttakeSample)
-                    .afterTime(9, IntakeSpecimen)
+                    .afterTime(7, ExtendoRetract)
+                    .afterTime(7.8, OuttakeSample)
+                    .afterTime(8.8, IntakeSpecimen)
+                    .afterTime(9, slidesSpecimen)
+                    .afterTime(9.8, V4BarDeposit)
+                    .afterTime(11.75, slidesGround)
+                    .afterTime(12.6, V4BarHP)
+                    .afterTime(14.35, IntakeSpecimen)
+                    .afterTime(14.55, slidesSpecimen)
+                    .afterTime(15, V4BarDeposit)
+                    .afterTime(17.5, slidesGround)
+
 
 
                     // Scoring 1st Specimen
-                    .strafeToLinearHeading(new Vector2d(10, -32), Math.toRadians(90),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
+                    .strafeToLinearHeading(new Vector2d(10, -32), Math.toRadians(90), // BAR POS
+                    new TranslationalVelConstraint(80),
+                    new ProfileAccelConstraint(-80, 80))
                     .setReversed(true)
                     .strafeToLinearHeading(new Vector2d(48.75, -40), Math.toRadians(90),
-                            new TranslationalVelConstraint(100),
-                            new ProfileAccelConstraint(-100, 100))
+                    new TranslationalVelConstraint(100),
+                    new ProfileAccelConstraint(-100, 100))
                     .strafeToLinearHeading(new Vector2d(48.75, -25), Math.toRadians(90),
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(30, -50), Math.toRadians(320),
-                            new TranslationalVelConstraint(100),
-                            new ProfileAccelConstraint(-100, 100))
+                    new TranslationalVelConstraint(40),
+                    new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(35, -50), Math.toRadians(320), // DEPOSIT 1ST BLOCK INTO O.Z.
+                    new TranslationalVelConstraint(100),
+                    new ProfileAccelConstraint(-100, 100))
                     .strafeToLinearHeading(new Vector2d(58, -40), Math.toRadians(90),
+                    new TranslationalVelConstraint(100),
+                    new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(58, -28), Math.toRadians(90),
+                    new TranslationalVelConstraint(40),
+                    new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
+                    new TranslationalVelConstraint(70),
+                    new ProfileAccelConstraint(-70, 70))
+                    .strafeToLinearHeading(new Vector2d(45, -52.5), Math.toRadians(270), // WALL POSITION
+                    new TranslationalVelConstraint(30),
+                    new ProfileAccelConstraint(-30, 30))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(6, -45, Math.toRadians(90)), Math.PI / 2,
+                    new TranslationalVelConstraint(80),
+                    new ProfileAccelConstraint(-80, 80))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(6, -35, Math.toRadians(90)), Math.PI / 2, // CHAMBER
+                    new TranslationalVelConstraint(30),
+                    new ProfileAccelConstraint(-30, 30))
+                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
+                    new TranslationalVelConstraint(70),
+                    new ProfileAccelConstraint(-70, 70))
+                    .strafeToLinearHeading(new Vector2d(45, -53), Math.toRadians(270), // WALL POSITION
+                    new TranslationalVelConstraint(30),
+                    new ProfileAccelConstraint(-30, 30))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(6, -45, Math.toRadians(90)), Math.PI / 2,
+                    new TranslationalVelConstraint(80),
+                    new ProfileAccelConstraint(-80, 80))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(6, -35, Math.toRadians(90)), Math.PI / 2, // CHAMBER
+                    new TranslationalVelConstraint(30),
+                    new ProfileAccelConstraint(-30, 30))
+                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
+                    new TranslationalVelConstraint(70),
+                    new ProfileAccelConstraint(-70, 70))
+                    .strafeToLinearHeading(new Vector2d(45, -53), Math.toRadians(270), // WALL POSITION
+                    new TranslationalVelConstraint(30),
+                    new ProfileAccelConstraint(-30, 30))
+                   */
+
+
+
+                    .setReversed(false)
+                    .splineToLinearHeading(new Pose2d(10, -32, Math.toRadians(90)), Math.PI / 2, // Bar position
+                            new TranslationalVelConstraint(70),
+                            new ProfileAccelConstraint(-70, 70))
+                    .setReversed(true)
+                    .strafeToLinearHeading(new Vector2d(35, -40), Math.toRadians(90), // WALL POSITION
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
+                    .strafeToLinearHeading(new Vector2d(35, -10), Math.toRadians(90), // WALL POSITION
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
+                    .strafeToLinearHeading(new Vector2d(45, -10), Math.toRadians(90), // WALL POSITION
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(58, -28), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(45, -44), Math.toRadians(90), // WALL POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(45, -10), Math.toRadians(90), // WALL POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(55, -10), Math.toRadians(90), // WALL POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(55, -44), Math.toRadians(90), // WALL POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(45, -45), Math.toRadians(270), // WALL POSITION
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(45, -51.5), Math.toRadians(270), // WALL POSITION
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(58, -40), Math.toRadians(270),
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
-                    .strafeToLinearHeading(new Vector2d(45, -47), Math.toRadians(270),
-                            new TranslationalVelConstraint(50),
-                            new ProfileAccelConstraint(-50, 50))
+
+
+
+
+                    /*
+
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(45, -41), Math.PI / 2, // Pushed against wall
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(45, -12), Math.PI / 2,
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .splineToConstantHeading(new Vector2d(57, -15), 11, // Second block position (in front of it, ready to push it)
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(57, -45), Math.PI / 2, // Pushed against wall
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .splineToConstantHeading(new Vector2d(57, -12), Math.PI / 2, // Pushed against wall
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .splineToConstantHeading(new Vector2d(62, -11), Math.PI / 2, // Pushed against wall
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(62, -45), Math.PI / 2, // Pushed against wall
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(50, -40), Math.toRadians(270), // WALL POSITION
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(50, -52), Math.toRadians(271), // WALL POSITION
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .setReversed(false)
+                    .splineToLinearHeading(new Pose2d(7, -36, Math.toRadians(90)), Math.PI / 2, // Bar position
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+
+                     */
+
                     .build());
 
 

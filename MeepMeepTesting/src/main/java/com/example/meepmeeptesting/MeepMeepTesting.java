@@ -17,15 +17,24 @@ public class MeepMeepTesting {
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(startPose)
 
                         .setReversed(false)
-                        .splineToLinearHeading(new Pose2d(9, -33, Math.toRadians(90)), Math.PI / 2)
+                        .splineToLinearHeading(new Pose2d(10, -32, Math.toRadians(90)), Math.PI / 2) // Bar position
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(35, -48, Math.toRadians(45)), Math.PI / 2)
+                        .splineToLinearHeading(new Pose2d(35, -43, Math.toRadians(90)), Math.PI / 2)
+                        .splineToLinearHeading(new Pose2d(35, -15, Math.toRadians(90)), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(45, -11), 11) // First block position (in front of it, ready to push it)
                         .setReversed(true)
-                        .splineToLinearHeading(new Pose2d(35, -36, Math.toRadians(45)), Math.PI / 2)
-
-
-
-
+                        .splineToConstantHeading(new Vector2d(45, -41), Math.PI / 2) // Pushed against wall
+                        .setReversed(true)
+                        .splineToConstantHeading(new Vector2d(45, -15), Math.PI / 2)
+                        .splineToConstantHeading(new Vector2d(57, -11), 11) // Second block position (in front of it, ready to push it)
+                        .setReversed(true)
+                        .splineToConstantHeading(new Vector2d(57, -41), Math.PI / 2) // Pushed against wall
+                        .splineToConstantHeading(new Vector2d(57, -11), Math.PI / 2) // WALL POSITION
+                        .splineToConstantHeading(new Vector2d(61, -11), 11) // Third block position (in front of it, ready to push it)
+                        .setReversed(true)
+                        .splineToConstantHeading(new Vector2d(61, -41), Math.PI / 2) // Pushed against wall
+                        .setReversed(true)
+                        .splineToLinearHeading(new Pose2d(50, -50, Math.toRadians(270)), 11) // WALL POSITION
                         .build());
 
 
