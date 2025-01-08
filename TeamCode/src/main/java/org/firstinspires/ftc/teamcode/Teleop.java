@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "NUTRON TELEOP", group = "TeleOp")
+@TeleOp(name = "teleop a la asg", group = "TeleOp")
 public class Teleop extends OpMode {
     // Mecanum drive motors
     private DcMotor leftFront, leftBack, rightFront, rightBack;
@@ -50,7 +50,7 @@ public class Teleop extends OpMode {
     private static final double HANGARMS_STATE_VERTICAL = 2700;
     private static final double HANGARMS_STATE_OUT = 7700;
     private static final double HANGARMS_STATE_HANGING1 = 600;
-    private static final double HANGARMS_STATE_HANGING2 = 2800;
+    private static final double HANGARMS_STATE_HANGING2 = 2200;
     private static final double HANGARMS_ENCODER_THRESHOLD = 250; // threshold for autonomous moving
 
     boolean wormManualControl = false;
@@ -302,11 +302,11 @@ public class Teleop extends OpMode {
                 }
             } else if (HANGARMS_STATE == 3) {
                 if (hangArmPos < HANGARMS_STATE_OUT - HANGARMS_ENCODER_THRESHOLD) {
-                    wormL.setPower(1.0);
-                    wormR.setPower(1.0);
+                    wormL.setPower(0.8);
+                    wormR.setPower(0.8);
                 } else if (hangArmPos > HANGARMS_STATE_OUT + HANGARMS_ENCODER_THRESHOLD) {
-                    wormL.setPower(-1.0);
-                    wormR.setPower(-1.0);
+                    wormL.setPower(-0.8);
+                    wormR.setPower(-0.8);
                 } else {
                     wormL.setPower(0);
                     wormR.setPower(0);
@@ -328,8 +328,8 @@ public class Teleop extends OpMode {
                 }
             } else if (HANGARMS_STATE == 4 && hangOneDone) {
                 if (hangArmPos < HANGARMS_STATE_HANGING2) {
-                    wormL.setPower(0.4);
-                    wormR.setPower(0.4);
+                    wormL.setPower(0.5);
+                    wormR.setPower(0.5);
                     holdExtendoIn = true;
                     holdVertsIn = true;
                 } else {
