@@ -24,7 +24,7 @@ public class Teleop extends OpMode {
     // Vertical slide motors
     private DcMotor vertL, vertR;
     // worm drive motors
-    private DcMotor wormL, wormR;
+    private DcMotor wormL, wormR, wormEncoder;
 
     private static final double HOLD_POWER = 0.25;
     private static final double SPECIMEN_VERT = 640;
@@ -94,6 +94,7 @@ public class Teleop extends OpMode {
         // Initialize worm drive motors
         wormL = hardwareMap.get(DcMotor.class, "wormL");
         wormR = hardwareMap.get(DcMotor.class, "wormR");
+        wormEncoder = hardwareMap.get(DcMotor.class, "leftBack");
 
         // Set vertical motors to brake at zero power
         vertL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -277,7 +278,7 @@ public class Teleop extends OpMode {
         }
 
 
-        hangArmPos = ((double) (wormL.getCurrentPosition() + wormR.getCurrentPosition()) / 2);
+        hangArmPos = ((double) (wormL.getCurrentPosition() - wormEncoder.getCurrentPosition()) / 2);
         if (gamepad1.b) {
             HANGARMS_STATE = 3;
             telemetry.addData("CHANGING STATE TO 2", "");
