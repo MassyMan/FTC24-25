@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "teleop a la asg", group = "TeleOp")
+@TeleOp(name = "TELEOP", group = "TeleOp")
 public class Teleop extends OpMode {
     // Mecanum drive motors
     private DcMotor leftFront, leftBack, rightFront, rightBack;
@@ -278,7 +278,7 @@ public class Teleop extends OpMode {
         }
 
 
-        hangArmPos = ((double) (wormL.getCurrentPosition() - wormEncoder.getCurrentPosition()) / 2);
+        hangArmPos = wormL.getCurrentPosition();
         if (gamepad1.b) {
             HANGARMS_STATE = 3;
             telemetry.addData("CHANGING STATE TO 2", "");
