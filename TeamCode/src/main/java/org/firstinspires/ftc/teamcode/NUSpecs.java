@@ -302,100 +302,17 @@ public class NUSpecs extends LinearOpMode {
                     .afterTime(9.6, IntakeSpecimen) // +1.6 [Grabbing 2nd Specimen]
                     .afterTime(10, slidesSpecimen) // +0.4
                     .afterTime(10.5, V4BarDeposit) // +0.5
-                    .afterTime(12.2, slidesGround) // +1.7
-                    .afterTime(12.6, V4BarHP) // +0.4
-                    .afterTime(14.5, IntakeSpecimen) // +1.9 [Grabbing 3rd Specimen]
-                    .afterTime(14.9, slidesSpecimen) // +0.4
-                    .afterTime(15.4, V4BarDeposit) // +0.5
-                    .afterTime(16.85, slidesGround) // +1.35
-                    .afterTime(17.5, V4BarHP) // +0.4
-                    .afterTime(19.4, IntakeSpecimen) // +1.9 [Grabbing 3rd Specimen]
-                    .afterTime(19.6, slidesSpecimen) // +0.4
-                    .afterTime(20.3, V4BarDeposit) // +0.5
-                    .afterTime(21.85, slidesGround) // +1.35
-
-               //     .afterTime(9, V4BarHP)
-                //    .afterTime(10, IntakeSpecimen)
-                //    .afterTime(10.25, slidesSpecimen)
-                    /*
-                    .afterTime(0, V4BarDeposit)
-                    .afterTime(1.8, ExtendoIntake)
-                    .afterTime(1.8, V4BarGround)
-                    .afterTime(2.5, IntakeSample)
-                    .afterTime(4.75, OuttakeSample)
-                    .afterTime(5.1, IntakeSample)
-                    .afterTime(7, V4BarHP)
-                    .afterTime(7, ExtendoRetract)
-                    .afterTime(7.8, OuttakeSample)
-                    .afterTime(8.8, IntakeSpecimen)
-                    .afterTime(9, slidesSpecimen)
-                    .afterTime(9.8, V4BarDeposit)
-                    .afterTime(11.75, slidesGround)
-                    .afterTime(12.6, V4BarHP)
-                    .afterTime(14.35, IntakeSpecimen)
-                    .afterTime(14.55, slidesSpecimen)
-                    .afterTime(15, V4BarDeposit)
-                    .afterTime(17.5, slidesGround)
-
-
-
-                    // Scoring 1st Specimen
-                    .strafeToLinearHeading(new Vector2d(10, -32), Math.toRadians(90), // BAR POS
-                    new TranslationalVelConstraint(80),
-                    new ProfileAccelConstraint(-80, 80))
-                    .setReversed(true)
-                    .strafeToLinearHeading(new Vector2d(48.75, -40), Math.toRadians(90),
-                    new TranslationalVelConstraint(100),
-                    new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(48.75, -25), Math.toRadians(90),
-                    new TranslationalVelConstraint(40),
-                    new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(35, -50), Math.toRadians(320), // DEPOSIT 1ST BLOCK INTO O.Z.
-                    new TranslationalVelConstraint(100),
-                    new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(58, -40), Math.toRadians(90),
-                    new TranslationalVelConstraint(100),
-                    new ProfileAccelConstraint(-100, 100))
-                    .strafeToLinearHeading(new Vector2d(58, -28), Math.toRadians(90),
-                    new TranslationalVelConstraint(40),
-                    new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
-                    new TranslationalVelConstraint(70),
-                    new ProfileAccelConstraint(-70, 70))
-                    .strafeToLinearHeading(new Vector2d(45, -52.5), Math.toRadians(270), // WALL POSITION
-                    new TranslationalVelConstraint(30),
-                    new ProfileAccelConstraint(-30, 30))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(6, -45, Math.toRadians(90)), Math.PI / 2,
-                    new TranslationalVelConstraint(80),
-                    new ProfileAccelConstraint(-80, 80))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(6, -35, Math.toRadians(90)), Math.PI / 2, // CHAMBER
-                    new TranslationalVelConstraint(30),
-                    new ProfileAccelConstraint(-30, 30))
-                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
-                    new TranslationalVelConstraint(70),
-                    new ProfileAccelConstraint(-70, 70))
-                    .strafeToLinearHeading(new Vector2d(45, -53), Math.toRadians(270), // WALL POSITION
-                    new TranslationalVelConstraint(30),
-                    new ProfileAccelConstraint(-30, 30))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(6, -45, Math.toRadians(90)), Math.PI / 2,
-                    new TranslationalVelConstraint(80),
-                    new ProfileAccelConstraint(-80, 80))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(6, -35, Math.toRadians(90)), Math.PI / 2, // CHAMBER
-                    new TranslationalVelConstraint(30),
-                    new ProfileAccelConstraint(-30, 30))
-                    .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
-                    new TranslationalVelConstraint(70),
-                    new ProfileAccelConstraint(-70, 70))
-                    .strafeToLinearHeading(new Vector2d(45, -53), Math.toRadians(270), // WALL POSITION
-                    new TranslationalVelConstraint(30),
-                    new ProfileAccelConstraint(-30, 30))
-                   */
-
-
+                    .afterTime(12.45, slidesGround) // +1.7
+                    .afterTime(12.85, V4BarHP) // +0.4
+                    .afterTime(14.75, IntakeSpecimen) // +1.9 [Grabbing 3rd Specimen]
+                    .afterTime(15.15, slidesSpecimen) // +0.4
+                    .afterTime(15.65, V4BarDeposit) // +0.5
+                    .afterTime(17.35, slidesGround) // +1.35
+                    .afterTime(18, V4BarHP) // +0.4
+                    .afterTime(19.9, IntakeSpecimen) // +1.9 [Grabbing 3rd Specimen]
+                    .afterTime(20.1, slidesSpecimen) // +0.4
+                    .afterTime(20.8, V4BarDeposit) // +0.5
+                    .afterTime(22.6, slidesGround) // +1.35
 
                     .setReversed(false)
                     .splineToLinearHeading(new Pose2d(10, -32, Math.toRadians(90)), Math.PI / 2, // Bar position
@@ -433,6 +350,7 @@ public class NUSpecs extends LinearOpMode {
                     .splineToLinearHeading(new Pose2d(6, -35.8, Math.toRadians(90)), Math.PI / 2, // BAR POSITION, DEPOSITING 2ND SPECIMEN
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
+                    .waitSeconds(0.25)
                     .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
@@ -444,6 +362,7 @@ public class NUSpecs extends LinearOpMode {
                     .splineToLinearHeading(new Pose2d(4, -35.8, Math.toRadians(90)), Math.PI / 2, // BAR POSITION, DEPOSITING 3RD SPECIMEN
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
+                            .waitSeconds(0.25)
                     .strafeToLinearHeading(new Vector2d(45, -40), Math.toRadians(270),
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
@@ -455,7 +374,7 @@ public class NUSpecs extends LinearOpMode {
                     .splineToLinearHeading(new Pose2d(0, -34.8, Math.toRadians(90)), Math.PI / 2, // BAR POSITION, DEPOSITING 4TH SPECIMEN
                             new TranslationalVelConstraint(60),
                             new ProfileAccelConstraint(-60, 60))
-                            .waitSeconds(0.5)
+                            .waitSeconds(0.25)
                     .strafeToLinearHeading(new Vector2d(55, -50), Math.toRadians(90),
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
