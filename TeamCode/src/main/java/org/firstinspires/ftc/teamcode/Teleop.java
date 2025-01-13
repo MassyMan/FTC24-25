@@ -27,7 +27,7 @@ public class Teleop extends OpMode {
     private DcMotor wormL, wormR, wormEncoder;
 
     private static final double HOLD_POWER = 0.25;
-    private static final double SPECIMEN_VERT = 640;
+    private static final double SPECIMEN_VERT = 695;
     private static final double VERT_MAX_TICKS = 1950;
 
     private static final double MIN_EXTENDO = 1500;
