@@ -296,6 +296,7 @@ public class NUSpecs extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(startPose) // Sequence scoring first specimen and pushing rest of the blocks
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.9, slidesGround)
+                    .afterTime(8, OuttakeSample)
                     .afterTime(0, V4BarDeposit)
                     .afterTime(8, ExtendoRetract)
                     .afterTime(9.5, V4BarHP)
@@ -307,19 +308,22 @@ public class NUSpecs extends LinearOpMode {
                             new ProfileAccelConstraint(-70, 70))
                     .waitSeconds(0.25)
                     .setReversed(true)
-                    .strafeToLinearHeading(new Vector2d(35, -44), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(25, -49), Math.toRadians(90),
                             new TranslationalVelConstraint(90),
                             new ProfileAccelConstraint(-90, 90))
-                    .strafeToLinearHeading(new Vector2d(35, -10), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(36, -49), Math.toRadians(90),
                             new TranslationalVelConstraint(90),
                             new ProfileAccelConstraint(-90, 90))
-                    .strafeToLinearHeading(new Vector2d(48, -10), Math.toRadians(90),  // FIRST BLOCK POSITION
+                    .strafeToLinearHeading(new Vector2d(36, -10), Math.toRadians(90),
                             new TranslationalVelConstraint(90),
                             new ProfileAccelConstraint(-90, 90))
-                    .strafeToLinearHeading(new Vector2d(48, -53), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(47, -10), Math.toRadians(90),  // FIRST BLOCK POSITION
                             new TranslationalVelConstraint(90),
                             new ProfileAccelConstraint(-90, 90))
-                    .strafeToLinearHeading(new Vector2d(48, -10), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(47, -53), Math.toRadians(90),
+                            new TranslationalVelConstraint(90),
+                            new ProfileAccelConstraint(-90, 90))
+                    .strafeToLinearHeading(new Vector2d(47, -10), Math.toRadians(90),
                             new TranslationalVelConstraint(90),
                             new ProfileAccelConstraint(-90, 90))
                     .strafeToLinearHeading(new Vector2d(58, -10), Math.toRadians(90), // SECOND BLOCK POSITION
@@ -354,6 +358,7 @@ public class NUSpecs extends LinearOpMode {
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(6, -34.5, Math.toRadians(90)))
                             .afterTime(0, slidesGround)
                             .afterTime(1.25, V4BarHP)
+                            .afterTime(1.5, OuttakeSample)
                             .afterTime(3.3, IntakeSpecimen)
                             .afterTime(3.5, slidesSpecimen) // +0.4
                             .afterTime(4.0, V4BarDeposit) // +0.5
@@ -380,6 +385,7 @@ public class NUSpecs extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(new Pose2d(2, -34.5, Math.toRadians(90)))
                     .afterTime(0, slidesGround)
                     .afterTime(1.25, V4BarHP)
+                    .afterTime(1.5, OuttakeSample)
                     .afterTime(3.3, IntakeSpecimen)
                     .afterTime(3.5, slidesSpecimen) // +0.4
                     .afterTime(4.0, V4BarDeposit) // +0.5
