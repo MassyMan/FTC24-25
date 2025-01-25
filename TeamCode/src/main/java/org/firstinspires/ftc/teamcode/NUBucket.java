@@ -19,7 +19,6 @@ import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Autonomous.Extendo;
 import org.firstinspires.ftc.teamcode.Autonomous.V4Bar;
 
 import java.util.Vector;
@@ -34,15 +33,15 @@ public class NUBucket extends LinearOpMode {
     private ExtendoMove extendoMove;
 
     // PIDF control variables
-    public static double kP = 0.1;
-    public static double kF = 0.4;
+    public static double kP = 0.08;
+    public static double kF = 0.2;
     public static final int THRESHOLD = 80;
     private static final double HOLD_POWER = 0.15;
-    private static final double MIN_DOWN_POWER = -0.90;
+    private static final double MIN_DOWN_POWER = -0.99;
     private static final int MAX_TICKS = 2000;
     private static final double MIN_EXTENDO = 0;
     private static final double MAX_EXTENDO = 15400;
-    private static final double EXTENDO_SPEED = -0.5;
+    private static final double EXTENDO_SPEED = -1.0;
     private static final double EXTENDO_TOLERANCE = 200;
 
 
@@ -269,7 +268,7 @@ public class NUBucket extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(-45, -60, Math.toRadians(180));
+        Pose2d startPose = new Pose2d(-40, -58, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -280,101 +279,113 @@ public class NUBucket extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            SlideLiftAction slidesBucket = new SlideLiftAction(slideLift, 1890);
+            SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 750);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
+            SlideLiftAction slidesBucket = new SlideLiftAction(slideLift, 1900);
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.17);
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.72);
+            V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.35);
 
+            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 3000);
+            ExtendoAction ExtendoBiggie = new ExtendoAction(extendoMove, 9000);
+            ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -25);
 
-            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 1500);
-            ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, 0);
-
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, -1, 1.8);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, -1, 1);
+            IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, -1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, 1.0, 0.2);
 
             Actions.runBlocking(drive.actionBuilder(startPose)
                     .afterTime(0, slidesBucket)
                     .afterTime(0, V4BarDeposit)
-                    .afterTime(2, slidesGround)
                     .afterTime(1.6, OuttakeSample)
-                    .afterTime(2.4, ExtendoIntake)
-                    .afterTime(2.6, V4BarGround)
-                    .afterTime(2.6, IntakeSample)
-                    .afterTime(3.9, slidesBucket)
-                    .afterTime(3.9, V4BarDeposit)
-                    .afterTime(5.7, OuttakeSample)
-                    .afterTime(5.9, slidesGround)
-                    .afterTime(6.4, V4BarGround)
-                    .afterTime(6.4, IntakeSample)
+                    .afterTime(1.9, slidesGround)
+                    .afterTime(2.75, ExtendoIntake)
+                    .afterTime(3, V4BarGround)
 
 
-
-                    .strafeToLinearHeading(new Vector2d(-59, -54), Math.toRadians(220),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
+                    .strafeToLinearHeading(new Vector2d(-57, -48), Math.toRadians(225), // BUCKET POSITION
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
                     .waitSeconds(1)
-                    .strafeToLinearHeading(new Vector2d(-55, -40), Math.toRadians(90),
+                    .strafeToLinearHeading(new Vector2d(-49, -45), Math.toRadians(90),
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(-55, -30), Math.toRadians(90),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .strafeToLinearHeading(new Vector2d(-56, -51), Math.toRadians(225),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .waitSeconds(1)
-                    .strafeToLinearHeading(new Vector2d(-65, -40), Math.toRadians(90),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .strafeToLinearHeading(new Vector2d(-65, -30), Math.toRadians(90),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
+                    .build());
 
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-49, -45, Math.toRadians(90)))
+                    .afterTime(0, IntakeSample)
+                    .afterTime(1, V4BarDeposit)
+                    .afterTime(1, ExtendoRetract)
+                    .afterTime(1, slidesBucket)
+                    .afterTime(2.8, OuttakeSample)
 
+                    .strafeToLinearHeading(new Vector2d(-49, -34), Math.toRadians(90), // FIRST BLOCK POSITION
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(-54, -48), Math.toRadians(225), // BUCKET POSITION
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .build());
 
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -48, Math.toRadians(225)))
+                    .afterTime(0, slidesGround)
+                    .afterTime(0.7, ExtendoIntake)
+                    .afterTime(0.7, V4BarGround)
+                    .afterTime(1.5, IntakeSample)
+                    .afterTime(2.5, ExtendoRetract)
+                    .afterTime(2.5, V4BarDeposit)
+                    .afterTime(2.5, slidesBucket)
+                    .afterTime(3.9, OuttakeSample)
 
-                    /*
-
-                    .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(45, -41), Math.PI / 2, // Pushed against wall
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(45, -12), Math.PI / 2,
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .splineToConstantHeading(new Vector2d(57, -15), 11, // Second block position (in front of it, ready to push it)
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(57, -45), Math.PI / 2, // Pushed against wall
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .splineToConstantHeading(new Vector2d(57, -12), Math.PI / 2, // Pushed against wall
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .splineToConstantHeading(new Vector2d(62, -11), Math.PI / 2, // Pushed against wall
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(62, -45), Math.PI / 2, // Pushed against wall
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(50, -40), Math.toRadians(270), // WALL POSITION
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .strafeToLinearHeading(new Vector2d(50, -52), Math.toRadians(271), // WALL POSITION
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .setReversed(false)
-                    .splineToLinearHeading(new Pose2d(7, -36, Math.toRadians(90)), Math.PI / 2, // Bar position
+                    .waitSeconds(0.3)
+                    .strafeToLinearHeading(new Vector2d(-58.5, -45), Math.toRadians(90),
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(-58.5, -33), Math.toRadians(90), // SECOND BLOCK POSITION
+                            new TranslationalVelConstraint(20),
+                            new ProfileAccelConstraint(-20, 20))
+                    .waitSeconds(0.25)
+                    .strafeToLinearHeading(new Vector2d(-54, -48), Math.toRadians(225), // BUCKET POSITION
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
 
-                     */
 
                     .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -48, Math.toRadians(225)))
+                    .afterTime(0, slidesGround)
+                            .waitSeconds(0.3)
+
+                    .strafeToLinearHeading(new Vector2d(-40, -34), Math.toRadians(180), // FIRST BLOCK POSITION
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .strafeToLinearHeading(new Vector2d(34, -34), Math.toRadians(180), // FIRST BLOCK POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .setReversed(false)
+                    .splineToLinearHeading(new Pose2d(34, -11, Math.toRadians(270)), Math.PI / 2, // Bar position
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+
+                    .strafeToLinearHeading(new Vector2d(44, -11), Math.toRadians(180), // FIRST BLOCK POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToLinearHeading(new Vector2d(44, -45), Math.toRadians(180), // FIRST BLOCK POSITION
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+
+
+
+
+
+
+
+                    .build());
+
+
+
+
 
 
 
