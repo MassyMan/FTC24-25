@@ -313,7 +313,7 @@ public class FiveGoldenSpectacles extends LinearOpMode {
                     .splineToConstantHeading(new Vector2d(40, -52), Math.PI / 2, // Bar position
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
-
+//
                     .build());
 
 
