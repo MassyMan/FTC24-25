@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,7 +24,7 @@ import org.firstinspires.ftc.teamcode.Autonomous.V4Bar;
 
 import java.util.Vector;
 
-@Config
+@Disabled
 @Autonomous(name = "NU Bucket", group = "Autonomous")
 public class NUBucket extends LinearOpMode {
 

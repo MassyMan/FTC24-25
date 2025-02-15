@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Disabled
 public class ActionScheduler {
 
     private final List<ScheduledAction> scheduledActions = new ArrayList<>();

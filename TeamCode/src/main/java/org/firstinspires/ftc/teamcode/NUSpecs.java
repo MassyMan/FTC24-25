@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.teamcode.Autonomous.V4Bar;
 
 import java.util.Vector;
 
+@Disabled
 @Config
 @Autonomous(name = "NU Specs", group = "Autonomous")
 public class NUSpecs extends LinearOpMode {
