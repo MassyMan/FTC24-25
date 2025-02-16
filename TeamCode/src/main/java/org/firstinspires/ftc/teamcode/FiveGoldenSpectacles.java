@@ -19,12 +19,12 @@ import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.Autonomous.V4Bar;
+
 
 import java.util.Vector;
 
 @Config
-@Autonomous(name = "FIVE SPECIMEN AUTO", group = "Autonomous")
+@Autonomous(name = "FIVE GOLDEN SPECTACLES", group = "Autonomous")
 public class FiveGoldenSpectacles extends LinearOpMode {
 
     private SlideLift slideLift;
@@ -275,7 +275,7 @@ public class FiveGoldenSpectacles extends LinearOpMode {
     // TODO: =======================================================================================
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(25, -60, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(25, -60, Math.toRadians(270));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -302,18 +302,31 @@ public class FiveGoldenSpectacles extends LinearOpMode {
 
             Actions.runBlocking(drive.actionBuilder(startPose) // Sequence scoring first specimen and pushing rest of the blocks
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(40, -11), Math.PI / 2, // Bar position
+                    .splineToConstantHeading(new Vector2d(40, -11), Math.PI / 2,
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(50, -11), Math.PI / 2, // Bar position
+                    .splineToConstantHeading(new Vector2d(50, -11), Math.PI / 2,
                             new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                            .strafeToConstantHeading(new Vector2d(50, -52),
+                                    new TranslationalVelConstraint(40),
+                                    new ProfileAccelConstraint(-40, 40))
+
+                    .build());
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(50, -52, Math.toRadians(270)))
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(50, -11), Math.PI / 2,
+                            new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-40, 40))
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(40, -52), Math.PI / 2, // Bar position
+                    .splineToConstantHeading(new Vector2d(60, -11), Math.PI / 2,
+                            new TranslationalVelConstraint(20),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToConstantHeading(new Vector2d(60, -40),
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
-//
                     .build());
 
 
