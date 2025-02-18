@@ -28,7 +28,7 @@ import java.util.Vector;
 public class FiveGoldenSpectacles extends LinearOpMode {
 
     private SlideLift slideLift;
-    private Servo v4Bar;
+    private Servo v4Bar, spinner;
     private CRServo intakeL, intakeR, slidL, slidR;
     private ExtendoMove extendoMove;
 
@@ -273,9 +273,31 @@ public class FiveGoldenSpectacles extends LinearOpMode {
     }
 
     // TODO: =======================================================================================
+
+    public class SpinnerAction implements Action {
+        private Servo spinner;
+        private double position;
+
+
+        public SpinnerAction(Servo spinner, double position) {
+            spinner = hardwareMap.get(Servo.class, "spinner");
+            this.spinner = spinner;
+            this.position = position;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            spinner.setPosition(position);
+            telemetry.addData("SPINNER", "Moving to Position: %.2f", position);
+            telemetry.update();
+            return false;
+        }
+    }
+
+    // TODO: =======================================================================================
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(25, -60, Math.toRadians(270));
+        Pose2d startPose = new Pose2d(10, -60, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -300,35 +322,64 @@ public class FiveGoldenSpectacles extends LinearOpMode {
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, -1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, 1.0, 0.2);
 
+            SpinnerAction SpinnerOUT = new SpinnerAction(spinner, 0.12);
+            SpinnerAction SpinnerPRIME = new SpinnerAction(spinner, 0.56);
+            SpinnerAction SpinnerIN = new SpinnerAction(spinner, 0.8);
+
             Actions.runBlocking(drive.actionBuilder(startPose) // Sequence scoring first specimen and pushing rest of the blocks
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(0, ExtendoRetract)
+                    .afterTime(0, SpinnerOUT)
+                    .afterTime(3, SpinnerPRIME)
+
+                    .strafeToConstantHeading(new Vector2d(10, -31),
+                        new TranslationalVelConstraint(70),
+                        new ProfileAccelConstraint(-70, 70))
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(40, -11), Math.PI / 2,
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
+                    .splineToLinearHeading(new Pose2d(36, -40, Math.toRadians(270)), Math.PI / 2,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToConstantHeading(new Vector2d(36, -10),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(50, -11), Math.PI / 2,
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                            .strafeToConstantHeading(new Vector2d(50, -52),
-                                    new TranslationalVelConstraint(40),
-                                    new ProfileAccelConstraint(-40, 40))
+                    .splineToConstantHeading(new Vector2d(50, -10), Math.PI / 2,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToConstantHeading(new Vector2d(50, -40),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+
 
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(50, -52, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(50, -40, Math.toRadians(270)))
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(50, -11), Math.PI / 2,
-                            new TranslationalVelConstraint(20),
-                            new ProfileAccelConstraint(-40, 40))
+                    .splineToConstantHeading(new Vector2d(42, -10), Math.PI / 2,
+                            new TranslationalVelConstraint(70),
+                            new ProfileAccelConstraint(-70, 70))
                     .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(60, -11), Math.PI / 2,
-                            new TranslationalVelConstraint(20),
-                            new ProfileAccelConstraint(-40, 40))
+                    .splineToConstantHeading(new Vector2d(60, -10), Math.PI / 2,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
                     .strafeToConstantHeading(new Vector2d(60, -40),
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
                     .build());
 
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(60, -40, Math.toRadians(270)))
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(55, -10), Math.PI / 2,
+                            new TranslationalVelConstraint(70),
+                            new ProfileAccelConstraint(-70, 70))
+                    .setReversed(true)
+                    .splineToConstantHeading(new Vector2d(65, -10), Math.PI / 2,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToConstantHeading(new Vector2d(65, -42),
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .build());
 
 
 
