@@ -294,6 +294,8 @@ public class FiveGoldenSpectacles extends LinearOpMode {
         }
     }
 
+
+
     // TODO: =======================================================================================
     @Override
     public void runOpMode() {
@@ -305,6 +307,8 @@ public class FiveGoldenSpectacles extends LinearOpMode {
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
         intakeL = hardwareMap.get(CRServo.class, "intakeL");
         intakeR = hardwareMap.get(CRServo.class, "intakeR");
+
+        
 
         waitForStart();
         if (opModeIsActive()) {

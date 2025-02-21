@@ -94,13 +94,13 @@ public class Teleop extends OpMode {
         // Initialize worm drive motors
         wormL = hardwareMap.get(DcMotor.class, "wormL");
         wormR = hardwareMap.get(DcMotor.class, "wormR");
-        wormEncoder = hardwareMap.get(DcMotor.class, "leftBack");
+        wormEncoder = hardwareMap.get(DcMotor.class, "wormL");
 
         // Set vertical motors to brake at zero power
         vertL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         vertR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        extendoEncoder = hardwareMap.get(DcMotorEx.class, "vertR");
+        extendoEncoder = hardwareMap.get(DcMotorEx.class, "leftBack");
         extendoEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -126,7 +126,7 @@ public class Teleop extends OpMode {
         rightFront.setPower(Range.clip((drive - strafe - rotate) * speedMultiplier, -1.0, 1.0));
         rightBack.setPower(Range.clip((drive + strafe - rotate) * speedMultiplier, -1.0, 1.0));
 
-        double currentExtendo = extendoEncoder.getCurrentPosition();
+        double currentExtendo = -extendoEncoder.getCurrentPosition();
         if (!holdExtendoIn) {
             if (gamepad2.left_stick_y < 0) { // If Joystick is extending
                 if (currentExtendo < MAX_EXTENDO) {
@@ -168,11 +168,11 @@ public class Teleop extends OpMode {
 
         // Intake control
         if (gamepad2.left_bumper) {
-            intakeL.setPower(-INTAKE_SPEED); // Intake
-            intakeR.setPower(INTAKE_SPEED); // Intake2 in the opposite direction
+            intakeL.setPower(INTAKE_SPEED); // Intake
+            intakeR.setPower(-INTAKE_SPEED); // Intake2 in the opposite direction
         } else if (gamepad2.left_trigger > 0.1) {
-            intakeL.setPower(OUTTAKE_SPEED); // Outtake
-            intakeR.setPower(-OUTTAKE_SPEED); // Intake2 in the opposite direction
+            intakeL.setPower(-OUTTAKE_SPEED); // Outtake
+            intakeR.setPower(OUTTAKE_SPEED); // Intake2 in the opposite direction
         } else {
             intakeL.setPower(0);
             intakeR.setPower(0);
