@@ -199,6 +199,11 @@ public class Teleop extends OpMode {
             if (gamepad2.dpad_up) {
                 v4BarPosition = 0.21;
             }
+
+            if (gamepad2.b) {
+                v4BarPosition = 0.5;
+            }
+
         }
 
 
