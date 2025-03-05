@@ -381,7 +381,7 @@ public class FiveGoldenSpectacles extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(new Pose2d(58, -47, Math.toRadians(270)))
                     .afterTime(1.5, ExtendoRetract)
                     .afterTime(1.5, V4BarHP)
-                    .afterTime(2.8, IntakeSpecimen)
+                    .afterTime(2.5, IntakeSpecimen)
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(55, -10), Math.PI / 2,
                             new TranslationalVelConstraint(100),
