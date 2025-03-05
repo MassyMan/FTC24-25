@@ -1,15 +1,15 @@
+/*
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -18,10 +18,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 
 
-
-import java.util.Vector;
+import java.util.Timer;
 
 @Config
 @Autonomous(name = "Multi Sample Auto", group = "Autonomous")
@@ -31,8 +32,8 @@ public class MultiSampleAuto extends LinearOpMode {
     private Servo v4Bar;
     private CRServo intakeL, intakeR, slidL, slidR;
     private ExtendoMove extendoMove;
+    private NormalizedColorSensor IntakeColor;
 
-    // PIDF control variables
     public static double kP = 0.08;
     public static double kF = 0.2;
     public static final int THRESHOLD = 80;
@@ -43,6 +44,10 @@ public class MultiSampleAuto extends LinearOpMode {
     private static final double MAX_EXTENDO = 15400;
     private static final double EXTENDO_SPEED = -0.5;
     private static final double EXTENDO_TOLERANCE = 200;
+    private static final double V4BAR_MIN_POSITION = 0.17;
+    private static final double V4BAR_MAX_POSITION = 0.72;
+    private static final double TARGET_SUB_EXTENDO = 3500;
+
 
 
     public class ExtendoMove {
@@ -273,6 +278,132 @@ public class MultiSampleAuto extends LinearOpMode {
     }
 
     // TODO: =======================================================================================
+
+    public class IntakeSubAction implements Action {
+        private CRServo intakeL;
+        private CRServo intakeR;
+        private Servo V4Bar;
+        private double power;
+        private double duration;
+        private ElapsedTime timer;
+        private boolean timerStarted = false; // Flag to track if the timer has started
+
+        public IntakeSubAction(CRServo intakeL, CRServo intakeR, Servo V4Bar, double power, double duration) {
+            this.intakeL = intakeL;
+            this.intakeR = intakeR;
+            this.power = power;
+            this.duration = duration;
+            this.timer = new ElapsedTime();
+            timerStarted = false;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            // Only reset the timer once, at the start of the action
+            if (!timerStarted) {
+                timer.reset();
+                timerStarted = true;
+            }
+
+            // Run the intake while the elapsed time is less than the specified duration
+            if (timer.seconds() < duration) {
+                V4Bar.setPosition(V4BAR_MAX_POSITION);
+                intakeL.setPower(power);
+                intakeR.setPower(-power);
+                return true;
+            } else {
+                // Stop the intake and mark the action as complete
+                V4Bar.setPosition(V4BAR_MIN_POSITION);
+                intakeL.setPower(0);
+                intakeR.setPower(0);
+                timerStarted = false;
+                timer.reset();
+                return false;
+            }
+        }
+    }
+
+    public class ExtendoSubMove {
+        private DcMotor extendoEncoder;
+        private double targetExtendo = 0; // reset targetExtendo
+        // TARGET_SUB_EXTENDO = 3500 ticks
+
+        public ExtendoSubMove(HardwareMap hardwareMap) {
+            slidL = hardwareMap.get(CRServo.class, "slidL");
+            slidR = hardwareMap.get(CRServo.class, "slidR");
+            extendoEncoder = hardwareMap.get(DcMotorEx.class, "vertR");
+            extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+
+        public void moveSubExtendo(double targetExtendo) {
+            double currentExtendo = -extendoEncoder.getCurrentPosition();
+            double extendoError = Math.abs(targetExtendo - currentExtendo);
+            this.targetExtendo = Range.clip(targetExtendo, MIN_EXTENDO, MAX_EXTENDO);
+
+            if (targetExtendo > currentExtendo) {
+                slidL.setPower(EXTENDO_SPEED);
+                slidR.setPower(-EXTENDO_SPEED);
+            } else {
+                slidL.setPower(-EXTENDO_SPEED);
+                slidR.setPower(EXTENDO_SPEED);
+            }
+        }
+
+        public boolean extendoSubAtTarget() {
+            return Math.abs(TARGET_SUB_EXTENDO + extendoEncoder.getCurrentPosition()) <= EXTENDO_TOLERANCE; // Threshold for error
+        }
+    }
+    public class ExtendoSubAction implements Action {
+        private ExtendoSubAction extendoSubMove;
+        private double targetExtendo;
+
+        public ExtendoSubAction(ExtendoSubMove extendoSubMove, double targetExtendo) {
+            this.extendoSubMove = extendoSubMove;
+            this.targetExtendo = Range.clip(3500, 0, MAX_EXTENDO);
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            extendoMove.moveExtendo(targetExtendo);
+            boolean extendoAtTarget = extendoMove.extendoAtTarget();
+            if (extendoAtTarget) {
+                slidL.setPower(0);
+                slidR.setPower(0);
+            }
+            telemetry.addData("ExtendoAction", "At Target: %b, Target Position: %.2f", extendoAtTarget, targetExtendo);
+            telemetry.update();
+            return !extendoAtTarget;
+        }
+    }
+
+    public class SubSequenceThing implements Action {
+        IntakeSubAction;
+        CancellableTrajectory trajectory;
+        Timer timer;
+
+        private double thresholdSeconds = 5;
+        public SubSequenceThing(CancellableTrajectory, IntakeSubAction, ExtendoSubAction) {
+        }
+
+        @Override
+        public boolean run(TelemetryPacket) {
+            trajectory.run();
+            IntakeSubAction.run();
+            ExtendoSubMove.run();
+
+            NormalizedRGBA colors = IntakeColor.getNormalizedColors();
+            private boolean colorSensorValid {
+                return (colors.red >= 0.5);
+            }
+
+
+
+            return colorSensorValid || timer >= thresholdSeconds;
+        }
+
+    }
+
+
     @Override
     public void runOpMode() {
         Pose2d startPose = new Pose2d(10, -61, Math.toRadians(90));
@@ -292,15 +423,17 @@ public class MultiSampleAuto extends LinearOpMode {
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.17);
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.72);
             V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.35);
-
-            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 1500);
+// params for new action: extendo action, intake action, cancelable trajectory action
+            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 3500);
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -20);
 
             IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, -1, 1.8);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, -1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, 1.0, 0.2);
 
-            Actions.runBlocking(drive.actionBuilder(startPose) // Sequence scoring first specimen and pushing rest of the blocks
+            Actions.runBlocking(drive.actionBuilder(startPose)
+                    .afterTime()
+                    // turning trajectory
 
                     .build());
 
@@ -311,3 +444,5 @@ public class MultiSampleAuto extends LinearOpMode {
         }
     }
 }
+
+ */

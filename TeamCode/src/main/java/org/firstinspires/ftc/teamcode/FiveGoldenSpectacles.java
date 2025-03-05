@@ -323,7 +323,7 @@ public class FiveGoldenSpectacles extends LinearOpMode {
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -50);
 
             IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 1.8);
-            IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.4);
+            IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, -1.0, 0.2);
 
             SpinnerAction SpinnerOUT = new SpinnerAction(spinner, 1.0);
@@ -338,13 +338,14 @@ public class FiveGoldenSpectacles extends LinearOpMode {
                     .afterTime(0, V4BarDeposit)
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0, ExtendoRetract)
-                    .afterTime(0.8, slidesGround)
+                    .afterTime(0.9, slidesGround)
                     .afterTime(3, SpinnerIN)
                     .afterTime(4.5, OuttakeSample)
 
-                    .strafeToConstantHeading(new Vector2d(8, -30.5),
+                    .strafeToConstantHeading(new Vector2d(8, -28),
                         new TranslationalVelConstraint(70),
                         new ProfileAccelConstraint(-70, 70))
+                            .waitSeconds(0.1)
                     .setReversed(true)
                     .splineToLinearHeading(new Pose2d(36, -40, Math.toRadians(270)), Math.PI / 2,
                             new TranslationalVelConstraint(100),
@@ -357,8 +358,8 @@ public class FiveGoldenSpectacles extends LinearOpMode {
                             new TranslationalVelConstraint(100),
                             new ProfileAccelConstraint(-100, 100))
                     .strafeToConstantHeading(new Vector2d(48, -47),
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
 
 
                     .build());
@@ -366,130 +367,141 @@ public class FiveGoldenSpectacles extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(new Pose2d(48, -47, Math.toRadians(270)))
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(42, -10), Math.PI / 2,
-                            new TranslationalVelConstraint(83),
-                            new ProfileAccelConstraint(-83, 83))
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(58, -10), Math.PI / 2,
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
                     .strafeToConstantHeading(new Vector2d(58, -47),
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
                     .build());
 
             Actions.runBlocking(drive.actionBuilder(new Pose2d(58, -47, Math.toRadians(270)))
                     .afterTime(1.5, ExtendoRetract)
                     .afterTime(1.5, V4BarHP)
-                    .afterTime(3, IntakeSpecimen)
+                    .afterTime(2.8, IntakeSpecimen)
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(55, -10), Math.PI / 2,
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(64.5, -10), Math.PI / 2,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .strafeToConstantHeading(new Vector2d(64.5, -44),
                             new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
-                    .strafeToConstantHeading(new Vector2d(64.5, -40),
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
+                            new ProfileAccelConstraint(-95, 95))
                     .strafeToConstantHeading(new Vector2d(64.5, -53),
-                            new TranslationalVelConstraint(20),
-                            new ProfileAccelConstraint(-20, 20))
+                            new TranslationalVelConstraint(30),
+                            new ProfileAccelConstraint(-30, 30))
 
                     .build());
 
             Actions.runBlocking(drive.actionBuilder(new Pose2d(64.5, -53, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
+                    .afterTime(0, SpinnerOUT)
                     .afterTime(0.5, V4BarDeposit)
-                    .afterTime(0.3, SpinnerOUT)
                     .afterTime(2.2, slidesGround)
-                    .afterTime(2.7, SpinnerIN)
                     .afterTime(3.5, V4BarHP)
-                    .afterTime(4.4, IntakeSpecimen)
+                    .afterTime(3.5, OuttakeSample)
+                    .afterTime(4.9, IntakeSpecimen)
 
 
                     .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(4, -28, Math.toRadians(90)), 90,
-                            new TranslationalVelConstraint(70),
-                            new ProfileAccelConstraint(-70, 70))
-                            .waitSeconds(0.2)
+                    .splineToLinearHeading(new Pose2d(4, -37, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(4, -26, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
+                            .waitSeconds(0.1)
                     .strafeToLinearHeading(new Vector2d(40, -40), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(40, -50.75, Math.toRadians(270)), Math.PI / 2,
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
+                    .strafeToLinearHeading(new Vector2d(40, -51.75), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
                             new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-20, 20))
 
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(40, -50.75, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(40, -51.75, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
+                    .afterTime(0, SpinnerOUT)
                     .afterTime(0.5, V4BarDeposit)
-                    .afterTime(0.3, SpinnerOUT)
-                    .afterTime(1.75, slidesGround)
-                    .afterTime(2.5, SpinnerIN)
-                    .afterTime(3.25, V4BarHP)
-                    .afterTime(4.4, IntakeSpecimen)
+                    .afterTime(1.9, slidesGround)
+                    .afterTime(3.5, V4BarHP)
+                    .afterTime(3.5, OuttakeSample)
+                    .afterTime(4.9, IntakeSpecimen)
 
 
                     .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(1, -28, Math.toRadians(90)), 90,
-                            new TranslationalVelConstraint(70),
-                            new ProfileAccelConstraint(-70, 70))
-                    .waitSeconds(0.2)
+                    .splineToLinearHeading(new Pose2d(1, -37, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(1, -26, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
+                    .waitSeconds(0.1)
                     .strafeToLinearHeading(new Vector2d(40, -40), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(40, -50.75, Math.toRadians(270)), Math.PI / 2,
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
+                    .strafeToLinearHeading(new Vector2d(40, -51.75), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
                             new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-20, 20))
 
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(40, -50.75, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(40, -51.75, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
+                    .afterTime(0, SpinnerOUT)
                     .afterTime(0.5, V4BarDeposit)
-                    .afterTime(0.3, SpinnerOUT)
-                    .afterTime(1.75, slidesGround)
-                    .afterTime(2.5, SpinnerIN)
-                    .afterTime(3.25, V4BarHP)
-                    .afterTime(4.3, IntakeSpecimen)
+                    .afterTime(1.9, slidesGround)
+                    .afterTime(3.5, V4BarHP)
+                    .afterTime(3.5, OuttakeSample)
+                    .afterTime(4.9, IntakeSpecimen)
 
 
                     .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(-1, -28, Math.toRadians(90)), 90,
-                            new TranslationalVelConstraint(70),
-                            new ProfileAccelConstraint(-70, 70))
-                    .waitSeconds(0.2)
+                    .splineToLinearHeading(new Pose2d(-1, -37, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(100),
+                            new ProfileAccelConstraint(-100, 100))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(-1, -26, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
+                    .waitSeconds(0.1)
                     .strafeToLinearHeading(new Vector2d(40, -40), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
-                            new TranslationalVelConstraint(90),
-                            new ProfileAccelConstraint(-90, 90))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(40, -50.75, Math.toRadians(270)), Math.PI / 2,
+                            new TranslationalVelConstraint(95),
+                            new ProfileAccelConstraint(-95, 95))
+                    .strafeToLinearHeading(new Vector2d(40, -51.5), Math.toRadians(270), // WALL POSITION, GRABBING 3RD SPECIMEN
                             new TranslationalVelConstraint(20),
                             new ProfileAccelConstraint(-20, 20))
 
                     .build());
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(40, -50.75, Math.toRadians(270)))
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(40, -51.75, Math.toRadians(270)))
                     .afterTime(0, slidesSpecimen)
                     .afterTime(0.5, V4BarDeposit)
-                    .afterTime(0.3, SpinnerOUT)
-                    .afterTime(1.75, slidesGround)
-
+                    .afterTime(2.1, slidesGround)
 
 
                     .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(-5, -28, Math.toRadians(90)), 90,
+                    .splineToLinearHeading(new Pose2d(-3, -37, Math.toRadians(90)), 90,
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
+                    .setReversed(true)
+                    .splineToLinearHeading(new Pose2d(-3, -26, Math.toRadians(90)), 90,
                             new TranslationalVelConstraint(80),
                             new ProfileAccelConstraint(-80, 80))
 
                     .build());
 
 
-// YAY FIVE SPECIMENS OMG
+
 
 
 
