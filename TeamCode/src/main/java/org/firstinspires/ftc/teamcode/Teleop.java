@@ -18,7 +18,7 @@ public class Teleop extends OpMode {
     private CRServo slidL, slidR;
 
     // Servo and CRServos for intake and V4Bar control
-    private Servo v4Bar;
+    private Servo v4Bar, spinner;
     private CRServo intakeL, intakeR;
 
     // Vertical slide motors
@@ -30,14 +30,14 @@ public class Teleop extends OpMode {
     private static final double SPECIMEN_VERT = 695;
     private static final double VERT_MAX_TICKS = 1950;
 
-    private static final double MIN_EXTENDO = 1500;
+    private static final double MIN_EXTENDO = 2500;
     private static final double MAX_EXTENDO = 15300;
 
     // V4Bar position limits
     private static final double V4BAR_MIN_POSITION = 0.17;
     private static final double V4BAR_MAX_POSITION = 0.72;
 
-    private static final double OUTTAKE_SPEED = 0.27;
+    private static final double OUTTAKE_SPEED = 0.2;
     private static final double INTAKE_SPEED = 1.0;
 
     private int HANGARMS_STATE = 2; // 1 = parallel to ground, 2 = vertical/safe, 3 = out, 4 = hanging
@@ -81,6 +81,9 @@ public class Teleop extends OpMode {
         // Initialize CRServos for slides
         slidL = hardwareMap.get(CRServo.class, "slidL");
         slidR = hardwareMap.get(CRServo.class, "slidR");
+
+        // Spinner servo
+        spinner = hardwareMap.get(Servo.class, "spinner");
 
         // Initialize servos for V4Bar and intake
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
@@ -170,20 +173,20 @@ public class Teleop extends OpMode {
         if (gamepad2.left_bumper) {
             intakeL.setPower(INTAKE_SPEED); // Intake
             intakeR.setPower(-INTAKE_SPEED); // Intake2 in the opposite direction
-        } else if (gamepad2.left_trigger > 0.1) {
-            intakeL.setPower(-OUTTAKE_SPEED); // Outtake
-            intakeR.setPower(OUTTAKE_SPEED); // Intake2 in the opposite direction
+        } else if (gamepad2.left_trigger > 0.05) {
+            intakeL.setPower(-gamepad2.left_trigger * 0.5); // Outtake
+            intakeR.setPower(gamepad2.left_trigger * 0.5); // Intake2 in the opposite direction
         } else {
             intakeL.setPower(0);
             intakeR.setPower(0);
         }
-        if (currentExtendo <= 14000) {
+        if (currentExtendo <= 15000) {
             // V4Bar control (only moves after initial command)
             if (gamepad2.right_bumper) {
-                v4BarPosition -= 0.025;
+                v4BarPosition -= 0.03;
                 v4BarMoved = true;
             } else if (gamepad2.right_trigger > 0) {
-                v4BarPosition += 0.025;
+                v4BarPosition += 0.03;
                 v4BarMoved = true;
             }
 
@@ -206,6 +209,18 @@ public class Teleop extends OpMode {
 
         }
 
+        // SPINNER
+        if (v4BarMoved) {
+            if (gamepad1.left_bumper) {
+                spinner.setPosition(1);
+            } else if (gamepad1.right_bumper) {
+                spinner.setPosition(0.4);
+            }
+        }
+
+        if (holdVertsIn) {
+            spinner.setPosition(0.56);
+        }
 
         // Get the current position of the vertical slide motor (vertL)
         int currentVertPosition = vertL.getCurrentPosition();
@@ -351,19 +366,22 @@ public class Teleop extends OpMode {
 
 
         // Telemetry
-        telemetry.addData("EXTENDO POSITION:", currentExtendo);
-        telemetry.addData("VERT SLIDE POSITION:", currentVertPosition);
-        telemetry.addData("V4BAR POSITION:", v4Bar.getPosition());
+        telemetry.addData("EXTENDO POS:", currentExtendo);
+        telemetry.addData("VERT SLIDE POS:", currentVertPosition);
+        telemetry.addData("V4BAR POS:", v4Bar.getPosition());
         telemetry.addLine();
         telemetry.addData("VERTL POWER:", vertL.getPower());
         telemetry.addData("VERTR POWER:", vertR.getPower());
         telemetry.addLine();
-        telemetry.addData("HANG POSITION:", hangArmPos);
+        telemetry.addData("HANG POS:", hangArmPos);
         telemetry.addData("HANG STATE:", HANGARMS_STATE);
-        telemetry.addData("WORM MANUAL CONTROL?:", wormManualControl);
-        telemetry.update();
+        telemetry.addLine();
+        telemetry.addData("SPINNER POS:", spinner.getPosition());
+        telemetry.addData("WORM -- MANUAL?:", wormManualControl);
+        telemetry.addLine();
+        telemetry.addLine("=====================================");
         telemetry.addData("LOOP TIME:", ElapsedTime.seconds());
-
+        telemetry.update();
         ElapsedTime.reset();
     }
 }
