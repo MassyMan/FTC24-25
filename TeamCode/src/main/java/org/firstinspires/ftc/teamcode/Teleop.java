@@ -44,6 +44,7 @@ public class Teleop extends OpMode {
 
     private double v4BarPosition = 0.2; // V4Bar Assumption starting position (will travel to after being moved)
     private boolean v4BarMoved = false; // Flag to check if V4Bar has been moved
+    public double prevVertPosition;
 
     private ElapsedTime ElapsedTime;
 
@@ -52,12 +53,16 @@ public class Teleop extends OpMode {
     private static final double HANGARMS_STATE_HANGING1 = 600;
     private static final double HANGARMS_STATE_HANGING2 = 2200;
     private static final double HANGARMS_ENCODER_THRESHOLD = 250; // threshold for autonomous moving
+    double currentVertPosition;
+    double currentHangArmPosition;
+    double prevHangArmPosition;
 
     boolean wormManualControl = false;
     boolean hangArmsTriggered = false;
     boolean hangOneDone = false;
     boolean holdVertsIn = false;
     boolean holdExtendoIn = false;
+    boolean EHubPowerOutHappened = false;
 
     private double hangArmPos = 0;
 
@@ -98,6 +103,9 @@ public class Teleop extends OpMode {
         wormL = hardwareMap.get(DcMotor.class, "wormL");
         wormR = hardwareMap.get(DcMotor.class, "wormR");
         wormEncoder = hardwareMap.get(DcMotor.class, "wormL");
+
+        hangArmPos = wormL.getCurrentPosition();
+        prevHangArmPosition = hangArmPos;
 
         // Set vertical motors to brake at zero power
         vertL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -222,8 +230,8 @@ public class Teleop extends OpMode {
             spinner.setPosition(0.56);
         }
 
-        // Get the current position of the vertical slide motor (vertL)
-        int currentVertPosition = vertL.getCurrentPosition();
+        currentVertPosition = vertL.getCurrentPosition(); // Update current vert position
+
 
         if (!holdVertsIn) {
 // Vertical slide control with slow-down effect when lowering
@@ -297,8 +305,17 @@ public class Teleop extends OpMode {
             hangArmsTriggered = true;
         }
 
+        if (Math.abs(hangArmPos - wormL.getCurrentPosition()) > 200); {
+            EHubPowerOutHappened = true;
+        }
 
-        hangArmPos = wormL.getCurrentPosition();
+        if (!EHubPowerOutHappened) {
+            hangArmPos = wormL.getCurrentPosition();
+            prevHangArmPosition = hangArmPos;
+        } else {
+            hangArmPos = prevHangArmPosition + wormL.getCurrentPosition();
+        }
+
         if (gamepad1.b) {
             HANGARMS_STATE = 3;
             telemetry.addData("CHANGING STATE TO 2", "");
@@ -379,6 +396,7 @@ public class Teleop extends OpMode {
         telemetry.addData("SPINNER POS:", spinner.getPosition());
         telemetry.addData("WORM -- MANUAL?:", wormManualControl);
         telemetry.addLine();
+        telemetry.addData("EHUB POWER OUTAGE:", EHubPowerOutHappened);
         telemetry.addLine("=====================================");
         telemetry.addData("LOOP TIME:", ElapsedTime.seconds());
         telemetry.update();
