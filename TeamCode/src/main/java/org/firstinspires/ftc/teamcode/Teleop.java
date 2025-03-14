@@ -26,8 +26,8 @@ public class Teleop extends OpMode {
     // worm drive motors
     private DcMotor wormL, wormR, wormEncoder;
 
-    private static final double HOLD_POWER = 0.25;
-    private static final double SPECIMEN_VERT = 695;
+    private static final double HOLD_POWER = 0.23;
+    private static final double SPECIMEN_VERT = 710;
     private static final double VERT_MAX_TICKS = 1950;
 
     private static final double MIN_EXTENDO = 2500;
@@ -56,6 +56,11 @@ public class Teleop extends OpMode {
     double currentVertPosition;
     double currentHangArmPosition;
     double prevHangArmPosition;
+
+    // SPINNIER POSITIONS
+
+    private static final double SPINNER_OUT = 1;
+    private static final double SPINNER_IN = 0.2;
 
     boolean wormManualControl = false;
     boolean hangArmsTriggered = false;
@@ -119,6 +124,8 @@ public class Teleop extends OpMode {
         wormL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         wormR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         wormR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        hangArmPos = wormL.getCurrentPosition();
+        EHubPowerOutHappened = false;
         // Initialize encoder and previous voltage
         // Analog encoder for slidL [extendo]
     }
@@ -199,7 +206,7 @@ public class Teleop extends OpMode {
             }
 
             if (gamepad2.dpad_left) {
-                v4BarPosition = 0.35;
+                v4BarPosition = 0.39;
             }
 
             v4BarPosition = Range.clip(v4BarPosition, V4BAR_MIN_POSITION, V4BAR_MAX_POSITION);
@@ -220,14 +227,14 @@ public class Teleop extends OpMode {
         // SPINNER
         if (v4BarMoved) {
             if (gamepad1.left_bumper) {
-                spinner.setPosition(1);
+                spinner.setPosition(SPINNER_OUT);
             } else if (gamepad1.right_bumper) {
-                spinner.setPosition(0.4);
+                spinner.setPosition(SPINNER_IN);
             }
         }
 
         if (holdVertsIn) {
-            spinner.setPosition(0.56);
+            spinner.setPosition(SPINNER_IN);
         }
 
         currentVertPosition = vertL.getCurrentPosition(); // Update current vert position
@@ -305,13 +312,14 @@ public class Teleop extends OpMode {
             hangArmsTriggered = true;
         }
 
-        if (Math.abs(hangArmPos - wormL.getCurrentPosition()) > 200); {
+        if ((Math.abs(hangArmPos - wormL.getCurrentPosition()) > 200) && !EHubPowerOutHappened); {
             EHubPowerOutHappened = true;
         }
 
         if (!EHubPowerOutHappened) {
             hangArmPos = wormL.getCurrentPosition();
             prevHangArmPosition = hangArmPos;
+
         } else {
             hangArmPos = prevHangArmPosition + wormL.getCurrentPosition();
         }
