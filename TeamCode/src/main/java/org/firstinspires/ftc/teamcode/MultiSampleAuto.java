@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -18,10 +19,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ColorSensor; // V3
 
-
-
-import java.util.Vector;
 
 @Config
 @Autonomous(name = "FIVE saMple", group = "Autonomous")
@@ -31,6 +30,8 @@ public class MultiSampleAuto extends LinearOpMode {
     private Servo v4Bar, spinner;
     private CRServo intakeL, intakeR, slidL, slidR;
     private ExtendoMove extendoMove;
+    private ColorSensor colorSensor; // TODO: COLOR SENSOR
+
 
     // PIDF control variables
     public static double kP = 0.08;
@@ -43,11 +44,14 @@ public class MultiSampleAuto extends LinearOpMode {
     private static final double MAX_EXTENDO = 15400;
     private static final double EXTENDO_SPEED = -0.5;
     private static final double EXTENDO_TOLERANCE = 200;
+    public static final double strafeIncrement = 4;
+    public double attemptCount = 0;
 
 
     public class ExtendoMove {
         private DcMotor extendoEncoder;
         private double targetExtendo = 0;
+
 
         public ExtendoMove(HardwareMap hardwareMap) {
             slidL = hardwareMap.get(CRServo.class, "slidL");
@@ -114,6 +118,7 @@ public class MultiSampleAuto extends LinearOpMode {
 
             vertL.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
             vertR.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor"); // colorSensor Color Sensor
 
             vertL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             vertR.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -294,6 +299,19 @@ public class MultiSampleAuto extends LinearOpMode {
         }
     }
 
+    public boolean hasSample(ColorSensor colorSensor){
+        if (colorSensor.green() > 1800) {
+            return true; // YELLOW
+        } else if (colorSensor.red() > 1000) {
+            return true; // RED
+        } else if (colorSensor.blue() > 1000) {
+            return false; // BLUE
+        } else if ((colorSensor.green() + colorSensor.blue() + colorSensor.red()) < 500) {
+            return false; // NOTHING
+        } else {
+            return false; // ERROR
+        }
+    }
 
 
     // TODO: =======================================================================================
@@ -307,6 +325,9 @@ public class MultiSampleAuto extends LinearOpMode {
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
         intakeL = hardwareMap.get(CRServo.class, "intakeL");
         intakeR = hardwareMap.get(CRServo.class, "intakeR");
+        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
+
+
 
 
 
@@ -315,14 +336,18 @@ public class MultiSampleAuto extends LinearOpMode {
             SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 750);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
 
+
+
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.27);
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.72);
             V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.4);
 
-            ExtendoAction ExtendoIntake = new ExtendoAction(extendoMove, 1500);
+            ExtendoAction ExtendoIntakeSub = new ExtendoAction(extendoMove, 5500);
+            ExtendoAction ExtendoIntakeGround = new ExtendoAction(extendoMove, 2500);
+            ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 14000); // TODO: Change these values
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -50);
 
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 1.8);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 5);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, -1.0, 0.2);
 
@@ -330,33 +355,24 @@ public class MultiSampleAuto extends LinearOpMode {
             SpinnerAction SpinnerPRIME = new SpinnerAction(spinner, 0.56); // old-- don't use this
             SpinnerAction SpinnerIN = new SpinnerAction(spinner, 0.3);
 
-            Actions.runBlocking(drive.actionBuilder(startPose) // Sequence scoring first specimen and pushing rest of the blocks
-                    .afterTime(0, SpinnerOUT)
-                    .afterTime(0, V4BarDeposit)
-                    .afterTime(0, slidesSpecimen)
-                    .afterTime(0, ExtendoRetract)
-                    .afterTime(1.0, slidesGround)
-                    .afterTime(3, SpinnerIN)
-                    .afterTime(4.5, OuttakeSample)
+            while (!hasSample(colorSensor) || attemptCount < 4) {
+                if (attemptCount > 0){ // Strafe if attemptcount > 0
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+                                    .afterTime(0, IntakeSample)
+                            .build());
 
-                    .strafeToConstantHeading(new Vector2d(8, -28),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .setReversed(true)
-                    .splineToLinearHeading(new Pose2d(36, -35, Math.toRadians(270)), Math.PI / 2,
-                            new TranslationalVelConstraint(100),
-                            new ProfileAccelConstraint(-100, 100))
-                    .strafeToConstantHeading(new Vector2d(36, -10),
-                            new TranslationalVelConstraint(100),
-                            new ProfileAccelConstraint(-100, 100))
-                    .setReversed(true)
-                    .splineToConstantHeading(new Vector2d(48, -10), 90,
-                            new TranslationalVelConstraint(100),
-                            new ProfileAccelConstraint(-100, 100))
-                    .strafeToConstantHeading(new Vector2d(48, -47),
-                            new TranslationalVelConstraint(95),
-                            new ProfileAccelConstraint(-95, 95))
+                } else { // Don't strafe if it's the first attempt
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+                            .afterTime(0, IntakeSample)
+                            .build());
+                }
+         //       attemptCount += 1;
 
+
+
+            }
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+                    .afterTime(0, OuttakeSample)
 
                     .build());
 

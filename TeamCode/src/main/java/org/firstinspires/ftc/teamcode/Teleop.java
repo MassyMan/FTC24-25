@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.ColorSensor; // V3
 
 @TeleOp(name = "TELEOP", group = "TeleOp")
 public class Teleop extends OpMode {
@@ -20,6 +21,7 @@ public class Teleop extends OpMode {
     // Servo and CRServos for intake and V4Bar control
     private Servo v4Bar, spinner;
     private CRServo intakeL, intakeR;
+    private ColorSensor colorSensor;
 
     // Vertical slide motors
     private DcMotor vertL, vertR;
@@ -68,6 +70,7 @@ public class Teleop extends OpMode {
     boolean holdVertsIn = false;
     boolean holdExtendoIn = false;
     boolean EHubPowerOutHappened = false;
+    String colorDetected;
 
     private double hangArmPos = 0;
 
@@ -99,6 +102,7 @@ public class Teleop extends OpMode {
         v4Bar = hardwareMap.get(Servo.class, "v4Bar");
         intakeL = hardwareMap.get(CRServo.class, "intakeL");
         intakeR = hardwareMap.get(CRServo.class, "intakeR");
+        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
 
         // Initialize vertical slide motors
         vertL = hardwareMap.get(DcMotor.class, "vertL");
@@ -388,6 +392,18 @@ public class Teleop extends OpMode {
             }
         }
 
+        if (colorSensor.green() > 1800) {
+            colorDetected = "YELLOW";
+        } else if (colorSensor.red() > 1000) {
+            colorDetected = "RED";
+        } else if (colorSensor.blue() > 1000) {
+            colorDetected = "BLUE";
+        } else if ((colorSensor.green() + colorSensor.blue() + colorSensor.red()) < 500) {
+            colorDetected = "NOTHING";
+        } else {
+            colorDetected = "ERROR";
+        }
+
 
 
         // Telemetry
@@ -407,6 +423,10 @@ public class Teleop extends OpMode {
         telemetry.addData("EHUB POWER OUTAGE:", EHubPowerOutHappened);
         telemetry.addLine("=====================================");
         telemetry.addData("LOOP TIME:", ElapsedTime.seconds());
+        telemetry.addData("Color GREEN:", colorSensor.green());
+        telemetry.addData("Color RED:", colorSensor.red());
+        telemetry.addData("Color BLUE:", colorSensor.blue());
+        telemetry.addData("Color Detected:", colorDetected);
         telemetry.update();
         ElapsedTime.reset();
     }
