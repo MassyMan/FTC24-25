@@ -347,7 +347,7 @@ public class MultiSampleAuto extends LinearOpMode {
             ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 14000); // TODO: Change these values
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -50);
 
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 5);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 1);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, -1.0, 0.2);
 
@@ -359,20 +359,32 @@ public class MultiSampleAuto extends LinearOpMode {
                 if (attemptCount > 0){ // Strafe if attemptcount > 0
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
                                     .afterTime(0, IntakeSample)
+                                    .afterTime(0, V4BarGround)
+                                    .waitSeconds(0.25)
                             .build());
 
                 } else { // Don't strafe if it's the first attempt
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
                             .afterTime(0, IntakeSample)
+                            .afterTime(0, V4BarGround)
+                                    .waitSeconds(0.25)
                             .build());
                 }
          //       attemptCount += 1;
-
+                if (hasSample(colorSensor)){
+                    break;
+                } else {
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+                            .afterTime(0, OuttakeSample)
+                                    .waitSeconds(0.1)
+                            .build());
+                }
 
 
             }
             Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
-                    .afterTime(0, OuttakeSample)
+                    .afterTime(0, V4BarDeposit)
+                            .waitSeconds(0.1)
 
                     .build());
 
