@@ -23,8 +23,8 @@ import com.qualcomm.robotcore.hardware.ColorSensor; // V3
 
 
 @Config
-@Autonomous(name = "FIVE saMple", group = "Autonomous")
-public class MultiSampleAuto extends LinearOpMode {
+@Autonomous(name = "RED 5Samp", group = "Autonomous")
+public class RedFiveSamp extends LinearOpMode {
 
     private SlideLift slideLift;
     private Servo v4Bar, spinner;
@@ -142,7 +142,7 @@ public class MultiSampleAuto extends LinearOpMode {
                 power = 0;
                 telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
                 telemetry.update();
-                if (currentPosition < 0){
+                if (currentPosition < 0) {
                     vertL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                 }
             }
@@ -299,7 +299,7 @@ public class MultiSampleAuto extends LinearOpMode {
         }
     }
 
-    public boolean hasSample(ColorSensor colorSensor){
+    public boolean hasSample(ColorSensor colorSensor) {
         if (colorSensor.green() > 1800) {
             return true; // YELLOW
         } else if (colorSensor.red() > 1000) {
@@ -328,14 +328,11 @@ public class MultiSampleAuto extends LinearOpMode {
         colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
 
 
-
-
-
         waitForStart();
         if (opModeIsActive()) {
             SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 750);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
-
+            SlideLiftAction slidesBucket = new SlideLiftAction(slideLift, 1950);
 
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.27);
@@ -347,7 +344,7 @@ public class MultiSampleAuto extends LinearOpMode {
             ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 14000); // TODO: Change these values
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -50);
 
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 1);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 2);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, -1.0, 0.2);
 
@@ -355,45 +352,76 @@ public class MultiSampleAuto extends LinearOpMode {
             SpinnerAction SpinnerPRIME = new SpinnerAction(spinner, 0.56); // old-- don't use this
             SpinnerAction SpinnerIN = new SpinnerAction(spinner, 0.3);
 
-            while (!hasSample(colorSensor) || attemptCount < 4) {
-                if (attemptCount > 0){ // Strafe if attemptcount > 0
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
-                                    .afterTime(0, IntakeSample)
-                                    .afterTime(0, V4BarGround)
-                                    .waitSeconds(0.25)
-                            .build());
+            /*
+                            HEADINGS ON FIELD
+                                ^ 90
+                            <  180    >  0
+                                v 270
 
-                } else { // Don't strafe if it's the first attempt
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+             */
+
+            // TODO: ============================== Auto Sequence ============================================
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-36, -60 + (attemptCount * strafeIncrement), Math.toRadians(180))) // TODO: CHECK POSE
+                    .afterTime(0, slidesBucket)
+                    .afterTime(0, V4BarDeposit)
+                    .afterTime(0, SpinnerIN)
+                    .afterTime(1.5, IntakeSample)
+                    .afterTime(2.5, slidesGround)
+                    .afterTime(1.5, OuttakeSample)
+                    .strafeToLinearHeading(new Vector2d(-52, -52), Math.toRadians(225), // WALL POSITION, GRABBING 3RD SPECIMEN
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+                    .waitSeconds(1)
+                    .strafeToLinearHeading(new Vector2d(-40, -35), Math.toRadians(90), // WALL POSITION, GRABBING 3RD SPECIMEN
+                            new TranslationalVelConstraint(60),
+                            new ProfileAccelConstraint(-60, 60))
+
+                    .build());
+
+/*
+            while (!hasSample(colorSensor) || attemptCount < 1000) { // Infinite attempts
+                if (attemptCount == 0){ // First attempt, don't strafe
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60, Math.toRadians(0))) // TODO: CHECK POSE
                             .afterTime(0, IntakeSample)
                             .afterTime(0, V4BarGround)
-                                    .waitSeconds(0.25)
+                            .afterTime(0.5, ExtendoMax)
+                            .waitSeconds(0)
                             .build());
+
+                } else { // Strafe on attempts other than first
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(0))) // TODO: CHECK POSE
+                            .afterTime(0, IntakeSample)
+
+                            .waitSeconds(0)
+                            .build());
+
                 }
-         //       attemptCount += 1;
+
                 if (hasSample(colorSensor)){
                     break;
-                } else {
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+                } else { // Cycling on to next attempt, outtaking sample to clear intake
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(0))) // TODO: CHECK POSE
                             .afterTime(0, OuttakeSample)
-                                    .waitSeconds(0.1)
+                            .afterTime(0, ExtendoIntakeSub)
+                            .strafeToConstantHeading(new Vector2d(10, -60 + (attemptCount*strafeIncrement)), // Strafe left strafeIncrement inches to get to new position
+                                new TranslationalVelConstraint(20),
+                                new ProfileAccelConstraint(-20, 20))
                             .build());
+
+                    attemptCount += 1;
                 }
 
 
             }
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90)))
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90))) // TODO: CHECK POSE
                     .afterTime(0, V4BarDeposit)
-                            .waitSeconds(0.1)
+
 
                     .build());
 
 
-
-
-
-
-
+*/
 
 
         }

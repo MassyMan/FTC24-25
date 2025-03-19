@@ -19,13 +19,9 @@ import com.qualcomm.robotcore.util.Range;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.Servo;
 
-
-
-import java.util.Vector;
-
 @Config
 @Autonomous(name = "FIVE SPECIMEN", group = "Autonomous")
-public class FiveGoldenSpectacles extends LinearOpMode {
+public class FiveSpecimen extends LinearOpMode {
 
     private SlideLift slideLift;
     private Servo v4Bar, spinner;
