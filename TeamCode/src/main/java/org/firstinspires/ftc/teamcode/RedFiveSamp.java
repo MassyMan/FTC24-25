@@ -56,7 +56,7 @@ public class RedFiveSamp extends LinearOpMode {
         public ExtendoMove(HardwareMap hardwareMap) {
             slidL = hardwareMap.get(CRServo.class, "slidL");
             slidR = hardwareMap.get(CRServo.class, "slidR");
-            extendoEncoder = hardwareMap.get(DcMotorEx.class, "vertR");
+            extendoEncoder = hardwareMap.get(DcMotorEx.class, "leftBack");
             extendoEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
@@ -317,7 +317,7 @@ public class RedFiveSamp extends LinearOpMode {
     // TODO: =======================================================================================
     @Override
     public void runOpMode() {
-        Pose2d startPose = new Pose2d(10, -60, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(-40, -60, Math.toRadians(180));
         MecanumDrive drive = new MecanumDrive(hardwareMap, startPose);
 
         slideLift = new SlideLift(hardwareMap);
@@ -361,22 +361,51 @@ public class RedFiveSamp extends LinearOpMode {
              */
 
             // TODO: ============================== Auto Sequence ============================================
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-36, -60 + (attemptCount * strafeIncrement), Math.toRadians(180))) // TODO: CHECK POSE
+
+            Actions.runBlocking(drive.actionBuilder(startPose) // TODO: CHECK POSE
                     .afterTime(0, slidesBucket)
                     .afterTime(0, V4BarDeposit)
                     .afterTime(0, SpinnerIN)
-                    .afterTime(1.5, IntakeSample)
-                    .afterTime(2.5, slidesGround)
-                    .afterTime(1.5, OuttakeSample)
-                    .strafeToLinearHeading(new Vector2d(-52, -52), Math.toRadians(225), // WALL POSITION, GRABBING 3RD SPECIMEN
-                            new TranslationalVelConstraint(60),
-                            new ProfileAccelConstraint(-60, 60))
-                    .waitSeconds(1)
-                    .strafeToLinearHeading(new Vector2d(-40, -35), Math.toRadians(90), // WALL POSITION, GRABBING 3RD SPECIMEN
-                            new TranslationalVelConstraint(60),
-                            new ProfileAccelConstraint(-60, 60))
+                    .afterTime(1.5, slidesGround)
+                    .afterTime(1.1, OuttakeSample)
+                    .afterTime(2.5, ExtendoIntakeGround)
+                    .afterTime(2.5, V4BarGround)
+                    .afterTime(2.6, V4BarGround)
+                    .afterTime(2.8, IntakeSample)
+                    .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .waitSeconds(0.5)
+                    .strafeToLinearHeading(new Vector2d(-50, -45), Math.toRadians(90), // FIRST GROUND BLOCK PRE-INTAKE POSE
+                            new TranslationalVelConstraint(30),
+                            new ProfileAccelConstraint(-30, 30))
+                    .strafeToLinearHeading(new Vector2d(-50, -32), Math.toRadians(90), // FIRST GROUND BLOCK INTAKING POSE
+                            new TranslationalVelConstraint(30),
+                            new ProfileAccelConstraint(-30, 30))
 
                     .build());
+
+            if (hasSample(colorSensor)) { // IF FIRST SAMPLE GRABBED CORRECTLY, RUN DEPOSIT CYCLE; ELSE, STRAFE TO NEXT BLOCK
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -32, Math.toRadians(90))) // DEPOSIT CYCLE ON FIRST GROUND BLOCK
+                        .afterTime(0, slidesBucket)
+                        .afterTime(0, V4BarDeposit)
+                        .afterTime(1.5, OuttakeSample)
+                        .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .build());
+            } else {
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -32, Math.toRadians(90))) // DEPOSIT CYCLE ON FIRST GROUND BLOCK
+                        .afterTime(1.5, IntakeSample)
+                        .strafeToLinearHeading(new Vector2d(-60, -50), Math.toRadians(90), // BUCKET POSITION
+                                new TranslationalVelConstraint(80),
+                                new ProfileAccelConstraint(-80, 80))
+                        .strafeToLinearHeading(new Vector2d(-60, -32), Math.toRadians(90), // BUCKET POSITION
+                                new TranslationalVelConstraint(30),
+                                new ProfileAccelConstraint(-30, 30))
+
+                        .build());
+            }
 
 /*
             while (!hasSample(colorSensor) || attemptCount < 1000) { // Infinite attempts
