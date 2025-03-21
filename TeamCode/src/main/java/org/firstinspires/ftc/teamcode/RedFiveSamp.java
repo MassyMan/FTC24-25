@@ -36,7 +36,7 @@ public class RedFiveSamp extends LinearOpMode {
     // PIDF control variables
     public static double kP = 0.08;
     public static double kF = 0.2;
-    public static final int THRESHOLD = 80;
+    public static final int THRESHOLD = 60;
     private static final double HOLD_POWER = 0.15;
     private static final double MIN_DOWN_POWER = -0.90;
     private static final int MAX_TICKS = 2000;
@@ -127,7 +127,7 @@ public class RedFiveSamp extends LinearOpMode {
         }
 
         public void moveSlides(double targetTicks) {
-            targetPosition = Range.clip(targetTicks, 0, MAX_TICKS);
+            targetPosition = Range.clip(targetTicks, -50, MAX_TICKS);
             int currentPosition = vertL.getCurrentPosition();
             double error = targetPosition - currentPosition;
             double power = kP * error + kF;
@@ -300,16 +300,18 @@ public class RedFiveSamp extends LinearOpMode {
     }
 
     public boolean hasSample(ColorSensor colorSensor) {
-        if (colorSensor.green() > 1800) {
+        if (colorSensor.green() + colorSensor.red() > (colorSensor.blue()*2) && colorSensor.green() > 200) {
             return true; // YELLOW
-        } else if (colorSensor.red() > 1000) {
-            return true; // RED
-        } else if (colorSensor.blue() > 1000) {
-            return false; // BLUE
-        } else if ((colorSensor.green() + colorSensor.blue() + colorSensor.red()) < 500) {
-            return false; // NOTHING
         } else {
             return false; // ERROR
+        }
+    }
+
+    public boolean hasSpike(ColorSensor colorSensor) {
+        if (colorSensor.green() > 300) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -331,20 +333,22 @@ public class RedFiveSamp extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 750);
-            SlideLiftAction slidesGround = new SlideLiftAction(slideLift, 0);
+            SlideLiftAction slidesGround = new SlideLiftAction(slideLift, -50);
             SlideLiftAction slidesBucket = new SlideLiftAction(slideLift, 1950);
 
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.27);
-            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.72);
+            V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.76);
             V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.4);
 
-            ExtendoAction ExtendoIntakeSub = new ExtendoAction(extendoMove, 5500);
+            ExtendoAction ExtendoIntakeSub = new ExtendoAction(extendoMove, 3500);
+            ExtendoAction ExtendoIntakeThird = new ExtendoAction(extendoMove, 10000);
             ExtendoAction ExtendoIntakeGround = new ExtendoAction(extendoMove, 2500);
-            ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 14000); // TODO: Change these values
+            ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 15400); // TODO: Change these values
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -50);
 
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 2);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 1);
+            IntakeSpinAction IntakeSub = new IntakeSpinAction(intakeL, intakeR, 1, 1.5);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, -1.0, 0.2);
 
@@ -362,7 +366,7 @@ public class RedFiveSamp extends LinearOpMode {
 
             // TODO: ============================== Auto Sequence ============================================
 
-            Actions.runBlocking(drive.actionBuilder(startPose) // TODO: CHECK POSE
+            Actions.runBlocking(drive.actionBuilder(startPose) // DEPOSIT PRELOAD AND INTAKE FIRST GROUND SEQUENCE
                     .afterTime(0, slidesBucket)
                     .afterTime(0, V4BarDeposit)
                     .afterTime(0, SpinnerIN)
@@ -379,33 +383,197 @@ public class RedFiveSamp extends LinearOpMode {
                     .strafeToLinearHeading(new Vector2d(-50, -45), Math.toRadians(90), // FIRST GROUND BLOCK PRE-INTAKE POSE
                             new TranslationalVelConstraint(30),
                             new ProfileAccelConstraint(-30, 30))
-                    .strafeToLinearHeading(new Vector2d(-50, -32), Math.toRadians(90), // FIRST GROUND BLOCK INTAKING POSE
+                    .strafeToLinearHeading(new Vector2d(-50, -30), Math.toRadians(90), // FIRST GROUND BLOCK INTAKING POSE
                             new TranslationalVelConstraint(30),
                             new ProfileAccelConstraint(-30, 30))
 
                     .build());
 
-            if (hasSample(colorSensor)) { // IF FIRST SAMPLE GRABBED CORRECTLY, RUN DEPOSIT CYCLE; ELSE, STRAFE TO NEXT BLOCK
-                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -32, Math.toRadians(90))) // DEPOSIT CYCLE ON FIRST GROUND BLOCK
-                        .afterTime(0, slidesBucket)
+            // TODO: ==========================================================
+
+            if (hasSpike(colorSensor)) { // IF FIRST SAMPLE GRABBED CORRECTLY, RUN DEPOSIT CYCLE; ELSE, STRAFE TO NEXT BLOCK
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -30, Math.toRadians(90))) // DEPOSIT CYCLE ON FIRST GROUND BLOCK
+                        .afterTime(0.75, slidesBucket)
                         .afterTime(0, V4BarDeposit)
-                        .afterTime(1.5, OuttakeSample)
+                        .afterTime(0, ExtendoRetract)
+                        .afterTime(2, OuttakeSample)
+                        .strafeToLinearHeading(new Vector2d(-42, -45), Math.toRadians(175), // EXTRA STRAFE TO AVOID HITTING OTHER SPIKE BLOCK
+                                new TranslationalVelConstraint(60),
+                                new ProfileAccelConstraint(-60, 60))
                         .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
                                 new TranslationalVelConstraint(40),
                                 new ProfileAccelConstraint(-40, 40))
                         .build());
-            } else {
-                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -32, Math.toRadians(90))) // DEPOSIT CYCLE ON FIRST GROUND BLOCK
-                        .afterTime(1.5, IntakeSample)
-                        .strafeToLinearHeading(new Vector2d(-60, -50), Math.toRadians(90), // BUCKET POSITION
-                                new TranslationalVelConstraint(80),
-                                new ProfileAccelConstraint(-80, 80))
-                        .strafeToLinearHeading(new Vector2d(-60, -32), Math.toRadians(90), // BUCKET POSITION
+
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -50, Math.toRadians(225))) // SEQUENCE TO INTAKE SECOND GROUND BLOCK AFTER DEPOSITING FIRST GROUND BLOCK
+                        .afterTime(0, slidesGround)
+                        .afterTime(1, ExtendoIntakeGround)
+                        .afterTime(1, V4BarGround)
+                        .afterTime(1.4, IntakeSample)
+                        .waitSeconds(0.2)
+                        .strafeToLinearHeading(new Vector2d(-59, -45), Math.toRadians(90),
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .strafeToLinearHeading(new Vector2d(-59, -32), Math.toRadians(90),
                                 new TranslationalVelConstraint(30),
                                 new ProfileAccelConstraint(-30, 30))
+                        .build());
 
+            } else { // MISSED FIRST GROUND BLOCK
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -30, Math.toRadians(90))) // SECOND GROUND BLOCK INTAKING SEQUENCE
+                        .afterTime(0, OuttakeSample)
+                        .afterTime(1.25, IntakeSample)
+                        .strafeToLinearHeading(new Vector2d(-59, -50), Math.toRadians(90),
+                                new TranslationalVelConstraint(80),
+                                new ProfileAccelConstraint(-80, 80))
+                        .strafeToLinearHeading(new Vector2d(-59, -32), Math.toRadians(90),
+                                new TranslationalVelConstraint(30),
+                                new ProfileAccelConstraint(-30, 30))
                         .build());
             }
+
+            // TODO: SECOND GROUND BLOCK FAIL-CHECK CYCLE
+
+            if (hasSpike(colorSensor)) { // IF SECOND SAMPLE GRABBED CORRECTLY, RUN DEPOSIT CYCLE; ELSE, STRAFE TO NEXT BLOCK
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-59, -32, Math.toRadians(90))) // DEPOSIT SECOND GROUND BLOCK
+                        .afterTime(0.5, slidesBucket)
+                        .afterTime(0, V4BarDeposit)
+                        .afterTime(0, ExtendoRetract)
+                        .afterTime(2, OuttakeSample)
+                        .strafeToLinearHeading(new Vector2d(-51, -45), Math.toRadians(175), // EXTRA STRAFE TO AVOID HITTING OTHER SPIKE BLOCK
+                                new TranslationalVelConstraint(60),
+                                new ProfileAccelConstraint(-60, 60))
+                        .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .build());
+
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -50, Math.toRadians(225))) // INTAKE THIRD GROUND BLOCK SEQUENCE
+                                .afterTime(0, slidesGround)
+                                .afterTime(0.75, ExtendoIntakeThird)
+                                .afterTime(0.75, V4BarGround)
+                                .afterTime(1.8, IntakeSample)
+                                .waitSeconds(0.2)
+                        .strafeToLinearHeading(new Vector2d(-58, -48), Math.toRadians(115),
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                                .waitSeconds(0.5)
+                        .strafeToLinearHeading(new Vector2d(-58, -35), Math.toRadians(115), // THIRD BLOCK POSITION
+                                new TranslationalVelConstraint(30),
+                                new ProfileAccelConstraint(-30, 30))
+                        .build());
+
+            } else { // MISSED SECOND GROUND BLOCK
+
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -30, Math.toRadians(90))) // INTAKING THIRD GROUND BLOCK
+                        .afterTime(0, OuttakeSample)
+                        .afterTime(0, ExtendoIntakeThird)
+                        .afterTime(1.8, IntakeSample)
+                        .strafeToLinearHeading(new Vector2d(-58, -48), Math.toRadians(115),
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .waitSeconds(0.5)
+                        .strafeToLinearHeading(new Vector2d(-58, -35), Math.toRadians(115), // THIRD BLOCK POSITION
+                                new TranslationalVelConstraint(30),
+                                new ProfileAccelConstraint(-30, 30))
+                        .build());
+
+
+            }
+
+            if (hasSpike(colorSensor)){
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -40, Math.toRadians(115))) // DEPOSIT THIRD GROUND BLOCK
+                        .afterTime(0.5, slidesBucket)
+                        .afterTime(0, V4BarDeposit)
+                        .afterTime(0, ExtendoRetract)
+                        .afterTime(2, OuttakeSample)
+                        .waitSeconds(0.4)
+                        .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
+                                new TranslationalVelConstraint(20),
+                                new ProfileAccelConstraint(-20, 20))
+                        .build());
+
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -50, Math.toRadians(225))) // GO TO SUBMERSIBLE
+                        .afterTime(0, slidesGround)
+                        .afterTime(1, V4BarHP)
+                        .afterTime(1, ExtendoIntakeSub)
+                        .waitSeconds(0.2)
+                        .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0),
+                                new TranslationalVelConstraint(80),
+                                new ProfileAccelConstraint(-80, 80))
+                        .strafeToLinearHeading(new Vector2d(-20, -6), Math.toRadians(0), // SUBMERSIBLE POSITION 1
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .build());
+            } else { // DIDN'T INTAKE THIRD BLOCK
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -40, Math.toRadians(115))) // DIDN'T GET THIRD BLOCK; GO TO SUBMERSIBLE
+                        .afterTime(0.2, V4BarHP)
+                        .afterTime(0, ExtendoRetract)
+                        .afterTime(0.5, OuttakeSample)
+                        .afterTime(1, ExtendoIntakeSub)
+                        .waitSeconds(0.5)
+                        .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0),
+                                new TranslationalVelConstraint(80),
+                                new ProfileAccelConstraint(-80, 80))
+                        .strafeToLinearHeading(new Vector2d(-20, -6), Math.toRadians(0),
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .build());
+            }
+
+            // TODO: ===================== SUB CYCLE SEQUENCE =======================
+
+            while (!hasSample(colorSensor)) {
+                if (attemptCount == 0) {
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6, Math.toRadians(0))) // TODO: CHECK POSE
+                            .afterTime(0, IntakeSub)
+                            .afterTime(0, V4BarGround)
+                            .afterTime(0, ExtendoMax)
+                            .afterTime(0.5, slidesGround)
+                            .waitSeconds(0.5)
+                            .build());
+
+                } else {
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
+                            .afterTime(0, IntakeSub)
+                            .afterTime(0, V4BarGround)
+                            .afterTime(0, ExtendoMax)
+                            .afterTime(0.5, slidesGround)
+                            .waitSeconds(0.5)
+                            .build());
+                }
+
+                if (hasSample(colorSensor)) {
+                    break;
+                } else {
+
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
+                            .afterTime(0, V4BarHP)
+                            .afterTime(0, ExtendoIntakeSub)
+                            .afterTime(0, slidesGround)
+                            .afterTime(0, OuttakeSample)
+                            .strafeToLinearHeading(new Vector2d(-20, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
+                                    new TranslationalVelConstraint(40),
+                                    new ProfileAccelConstraint(-40, 40))
+                            .build());
+
+                    attemptCount += 1;
+                }
+
+            }
+
+            Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // DEPOSIT 5TH SAMPLE
+                    .afterTime(0, V4BarHP)
+                    .afterTime(0, ExtendoRetract)
+                    .afterTime(1.5, slidesBucket)
+                    .afterTime(3.25, OuttakeSample)
+                    .strafeToLinearHeading(new Vector2d(-40, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
+                            new TranslationalVelConstraint(40),
+                            new ProfileAccelConstraint(-40, 40))
+                    .build());
 
 /*
             while (!hasSample(colorSensor) || attemptCount < 1000) { // Infinite attempts
