@@ -42,9 +42,9 @@ public class RedFiveSamp extends LinearOpMode {
     private static final int MAX_TICKS = 2000;
     private static final double MIN_EXTENDO = 0;
     private static final double MAX_EXTENDO = 15400;
-    private static final double EXTENDO_SPEED = -0.5;
+    private static final double EXTENDO_SPEED = -1.0;
     private static final double EXTENDO_TOLERANCE = 200;
-    public static final double strafeIncrement = 4;
+    public static final double strafeIncrement = 3;
     public double attemptCount = 0;
 
 
@@ -76,7 +76,12 @@ public class RedFiveSamp extends LinearOpMode {
         }
 
         public boolean extendoAtTarget() {
-            return Math.abs(targetExtendo + extendoEncoder.getCurrentPosition()) <= EXTENDO_TOLERANCE; // Threshold for error
+            if (hasSample(colorSensor) && targetExtendo == 15400) {
+                return true;
+            } else {
+                return Math.abs(targetExtendo + extendoEncoder.getCurrentPosition()) <= EXTENDO_TOLERANCE; // Threshold for error
+            }
+
         }
     }
 
@@ -341,7 +346,8 @@ public class RedFiveSamp extends LinearOpMode {
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.76);
             V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.4);
 
-            ExtendoAction ExtendoIntakeSub = new ExtendoAction(extendoMove, 3500);
+            ExtendoAction ExtendoIntakeSub = new ExtendoAction(extendoMove, 3000);
+            ExtendoAction ExtendoIntakeSubDeluxe = new ExtendoAction(extendoMove, 5000);
             ExtendoAction ExtendoIntakeThird = new ExtendoAction(extendoMove, 10000);
             ExtendoAction ExtendoIntakeGround = new ExtendoAction(extendoMove, 2500);
             ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 15400); // TODO: Change these values
@@ -423,6 +429,9 @@ public class RedFiveSamp extends LinearOpMode {
                 Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -30, Math.toRadians(90))) // SECOND GROUND BLOCK INTAKING SEQUENCE
                         .afterTime(0, OuttakeSample)
                         .afterTime(1.25, IntakeSample)
+                        .strafeToLinearHeading(new Vector2d(-50, -50), Math.toRadians(90),
+                                new TranslationalVelConstraint(80),
+                                new ProfileAccelConstraint(-80, 80))
                         .strafeToLinearHeading(new Vector2d(-59, -50), Math.toRadians(90),
                                 new TranslationalVelConstraint(80),
                                 new ProfileAccelConstraint(-80, 80))
@@ -495,7 +504,6 @@ public class RedFiveSamp extends LinearOpMode {
 
                 Actions.runBlocking(drive.actionBuilder(new Pose2d(-54, -50, Math.toRadians(225))) // GO TO SUBMERSIBLE
                         .afterTime(0, slidesGround)
-                        .afterTime(1, V4BarHP)
                         .afterTime(1, ExtendoIntakeSub)
                         .waitSeconds(0.2)
                         .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0),
@@ -507,10 +515,11 @@ public class RedFiveSamp extends LinearOpMode {
                         .build());
             } else { // DIDN'T INTAKE THIRD BLOCK
                 Actions.runBlocking(drive.actionBuilder(new Pose2d(-58, -40, Math.toRadians(115))) // DIDN'T GET THIRD BLOCK; GO TO SUBMERSIBLE
-                        .afterTime(0.2, V4BarHP)
                         .afterTime(0, ExtendoRetract)
                         .afterTime(0.5, OuttakeSample)
                         .afterTime(1, ExtendoIntakeSub)
+                        .afterTime(1.5, V4BarGround)
+                        .afterTime(1.8, V4BarHP)
                         .waitSeconds(0.5)
                         .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0),
                                 new TranslationalVelConstraint(80),
@@ -528,8 +537,8 @@ public class RedFiveSamp extends LinearOpMode {
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6, Math.toRadians(0))) // TODO: CHECK POSE
                             .afterTime(0, IntakeSub)
                             .afterTime(0, V4BarGround)
-                            .afterTime(0, ExtendoMax)
-                            .afterTime(0.5, slidesGround)
+                            .afterTime(0.5, ExtendoMax)
+                            .afterTime(0.75, slidesGround)
                             .waitSeconds(0.5)
                             .build());
 
@@ -537,8 +546,8 @@ public class RedFiveSamp extends LinearOpMode {
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
                             .afterTime(0, IntakeSub)
                             .afterTime(0, V4BarGround)
-                            .afterTime(0, ExtendoMax)
-                            .afterTime(0.5, slidesGround)
+                            .afterTime(0.5, ExtendoMax)
+                            .afterTime(0.75, slidesGround)
                             .waitSeconds(0.5)
                             .build());
                 }
@@ -548,9 +557,8 @@ public class RedFiveSamp extends LinearOpMode {
                 } else {
 
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
-                            .afterTime(0, V4BarHP)
-                            .afterTime(0, ExtendoIntakeSub)
-                            .afterTime(0, slidesGround)
+                            .afterTime(0, ExtendoIntakeSubDeluxe)
+                            .afterTime(0.75, slidesGround)
                             .afterTime(0, OuttakeSample)
                             .strafeToLinearHeading(new Vector2d(-20, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
                                     new TranslationalVelConstraint(40),
@@ -563,13 +571,13 @@ public class RedFiveSamp extends LinearOpMode {
             }
 
             Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // DEPOSIT 5TH SAMPLE
-                    .afterTime(0, V4BarHP)
+                    .afterTime(0, V4BarDeposit)
                     .afterTime(0, ExtendoRetract)
                     .afterTime(1.5, slidesBucket)
                     .afterTime(3.25, OuttakeSample)
-                    .strafeToLinearHeading(new Vector2d(-40, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
+                    .strafeToLinearHeading(new Vector2d(-50, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
+                            new TranslationalVelConstraint(80),
+                            new ProfileAccelConstraint(-80, 80))
                     .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
