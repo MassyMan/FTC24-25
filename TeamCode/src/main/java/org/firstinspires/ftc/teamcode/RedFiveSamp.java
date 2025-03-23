@@ -32,6 +32,8 @@ public class RedFiveSamp extends LinearOpMode {
     private ExtendoMove extendoMove;
     private ColorSensor colorSensor; // TODO: COLOR SENSOR
 
+    ElapsedTime gameClock;
+
 
     // PIDF control variables
     public static double kP = 0.08;
@@ -44,7 +46,7 @@ public class RedFiveSamp extends LinearOpMode {
     private static final double MAX_EXTENDO = 15400;
     private static final double EXTENDO_SPEED = -1.0;
     private static final double EXTENDO_TOLERANCE = 200;
-    public static final double strafeIncrement = 3;
+    public static final double strafeIncrement = 4;
     public double attemptCount = 0;
 
 
@@ -76,7 +78,7 @@ public class RedFiveSamp extends LinearOpMode {
         }
 
         public boolean extendoAtTarget() {
-            if (hasSample(colorSensor) && targetExtendo == 15400) {
+            if (hasSample(colorSensor) && targetExtendo == 11200) {
                 return true;
             } else {
                 return Math.abs(targetExtendo + extendoEncoder.getCurrentPosition()) <= EXTENDO_TOLERANCE; // Threshold for error
@@ -138,36 +140,38 @@ public class RedFiveSamp extends LinearOpMode {
             double power = kP * error + kF;
             power = Range.clip(power, MIN_DOWN_POWER, 1.0);
 
-            if (power < 0) {
-                power = Math.max(power, MIN_DOWN_POWER);
-            }
-
-            if ((currentPosition <= 1) && (power < 0) && targetPosition == 0) {
-                stopSlides();
-                power = 0;
-                telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
-                telemetry.update();
-                if (currentPosition < 0) {
-                    vertL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                if (power < 0) {
+                    power = Math.max(power, MIN_DOWN_POWER);
                 }
-            }
 
-            vertL.setPower(power);
-            vertR.setPower(power);
+                if ((currentPosition <= 1) && (power < 0) && targetPosition == 0) {
+                    stopSlides();
+                    power = 0;
+                    telemetry.addData("Slide Lift", "Stopping power, gravity pulling to 0");
+                    telemetry.update();
+                    if (currentPosition < 0) {
+                        vertL.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    }
+                }
 
-            if (Math.abs(error) <= THRESHOLD && targetPosition != 0) {
-                vertL.setPower(HOLD_POWER);
-                vertR.setPower(HOLD_POWER);
-                telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
+                vertL.setPower(power);
+                vertR.setPower(power);
+
+                if (Math.abs(error) <= THRESHOLD && targetPosition != 0) {
+                    vertL.setPower(HOLD_POWER);
+                    vertR.setPower(HOLD_POWER);
+                    telemetry.addData("Slide Lift", "Holding at Position: %d", currentPosition);
+                    telemetry.update();
+                }
+
+                telemetry.addData("Slide Lift", "Target Position: %d", (int) targetPosition);
+                telemetry.addData("Current Position", currentPosition);
+                telemetry.addData("Error", error);
+                telemetry.addData("Power Output", power);
+                telemetry.addData("Is At Target", isAtTarget());
                 telemetry.update();
-            }
 
-            telemetry.addData("Slide Lift", "Target Position: %d", (int) targetPosition);
-            telemetry.addData("Current Position", currentPosition);
-            telemetry.addData("Error", error);
-            telemetry.addData("Power Output", power);
-            telemetry.addData("Is At Target", isAtTarget());
-            telemetry.update();
+
         }
 
         public void stopSlides() {
@@ -216,6 +220,25 @@ public class RedFiveSamp extends LinearOpMode {
     }
 
     // TODO: ======================================================================================
+
+    public class SlidesSetPowerAction implements Action {
+        public DcMotorEx vertL;
+        public DcMotorEx vertR;
+        private double power;
+
+        public SlidesSetPowerAction(DcMotorEx vertL, DcMotorEx vertR, double power) {
+            this.vertL = vertL;
+            this.vertR = vertR;
+            this.power = power;
+        }
+
+        @Override
+        public boolean run(TelemetryPacket packet) {
+            vertL.setPower(-power);
+            vertR.setPower(-power);
+            return false;
+        }
+    }
 
     public class IntakeSpinAction implements Action {
         private CRServo intakeL;
@@ -306,15 +329,15 @@ public class RedFiveSamp extends LinearOpMode {
 
     public boolean hasSample(ColorSensor colorSensor) {
         if (colorSensor.green() + colorSensor.red() > (colorSensor.blue()*2) && colorSensor.green() > 200) {
-            return true; // YELLOW
+            return true; // YELLOW or red
         } else {
-            return false; // ERROR
+            return false; // ERROR; blue or none
         }
     }
 
     public boolean hasSpike(ColorSensor colorSensor) {
         if (colorSensor.green() > 300) {
-            return true;
+            return true; // presence
         } else {
             return false;
         }
@@ -335,26 +358,33 @@ public class RedFiveSamp extends LinearOpMode {
         colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
 
 
+
+
         waitForStart();
         if (opModeIsActive()) {
             SlideLiftAction slidesSpecimen = new SlideLiftAction(slideLift, 750);
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, -50);
             SlideLiftAction slidesBucket = new SlideLiftAction(slideLift, 1950);
 
+            gameClock.reset();
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.27);
             V4BarAction V4BarGround = new V4BarAction(v4Bar, 0.76);
             V4BarAction V4BarHP = new V4BarAction(v4Bar, 0.4);
 
+            SlidesSetPowerAction holdDownSlides = new SlidesSetPowerAction(slideLift.vertL, slideLift.vertR, 0.3);
+            SlidesSetPowerAction slidesZeroPower = new SlidesSetPowerAction(slideLift.vertL, slideLift.vertR, 0);
+
             ExtendoAction ExtendoIntakeSub = new ExtendoAction(extendoMove, 3000);
-            ExtendoAction ExtendoIntakeSubDeluxe = new ExtendoAction(extendoMove, 5000);
-            ExtendoAction ExtendoIntakeThird = new ExtendoAction(extendoMove, 10000);
+            ExtendoAction ExtendoIntakeSubDeluxe = new ExtendoAction(extendoMove, 6000);
+            ExtendoAction ExtendoIntakeThird = new ExtendoAction(extendoMove, 11000);
             ExtendoAction ExtendoIntakeGround = new ExtendoAction(extendoMove, 2500);
-            ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 15400); // TODO: Change these values
+            ExtendoAction ExtendoMax = new ExtendoAction(extendoMove, 11200); // TODO: Change these values
             ExtendoAction ExtendoRetract = new ExtendoAction(extendoMove, -50);
 
-            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 1);
+            IntakeSpinAction IntakeSample = new IntakeSpinAction(intakeL, intakeR, 1, 0.75);
             IntakeSpinAction IntakeSub = new IntakeSpinAction(intakeL, intakeR, 1, 1.5);
+            IntakeSpinAction IntakeSubLong = new IntakeSpinAction(intakeL, intakeR, 1, 2.8);
             IntakeSpinAction IntakeSpecimen = new IntakeSpinAction(intakeL, intakeR, 1, 0.2);
             IntakeSpinAction OuttakeSample = new IntakeSpinAction(intakeL, intakeR, -1.0, 0.2);
 
@@ -381,7 +411,7 @@ public class RedFiveSamp extends LinearOpMode {
                     .afterTime(2.5, ExtendoIntakeGround)
                     .afterTime(2.5, V4BarGround)
                     .afterTime(2.6, V4BarGround)
-                    .afterTime(2.8, IntakeSample)
+                    .afterTime(3.0, IntakeSample)
                     .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
                             new TranslationalVelConstraint(40),
                             new ProfileAccelConstraint(-40, 40))
@@ -428,7 +458,7 @@ public class RedFiveSamp extends LinearOpMode {
             } else { // MISSED FIRST GROUND BLOCK
                 Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -30, Math.toRadians(90))) // SECOND GROUND BLOCK INTAKING SEQUENCE
                         .afterTime(0, OuttakeSample)
-                        .afterTime(1.25, IntakeSample)
+                        .afterTime(2.4, IntakeSample)
                         .strafeToLinearHeading(new Vector2d(-50, -50), Math.toRadians(90),
                                 new TranslationalVelConstraint(80),
                                 new ProfileAccelConstraint(-80, 80))
@@ -468,23 +498,23 @@ public class RedFiveSamp extends LinearOpMode {
                                 new ProfileAccelConstraint(-40, 40))
                                 .waitSeconds(0.5)
                         .strafeToLinearHeading(new Vector2d(-58, -35), Math.toRadians(115), // THIRD BLOCK POSITION
-                                new TranslationalVelConstraint(30),
-                                new ProfileAccelConstraint(-30, 30))
+                                new TranslationalVelConstraint(20),
+                                new ProfileAccelConstraint(-20, 20))
                         .build());
 
             } else { // MISSED SECOND GROUND BLOCK
 
                 Actions.runBlocking(drive.actionBuilder(new Pose2d(-50, -30, Math.toRadians(90))) // INTAKING THIRD GROUND BLOCK
                         .afterTime(0, OuttakeSample)
-                        .afterTime(0, ExtendoIntakeThird)
-                        .afterTime(1.8, IntakeSample)
+                        .afterTime(0.5, ExtendoIntakeThird)
+                        .afterTime(2, IntakeSample)
                         .strafeToLinearHeading(new Vector2d(-58, -48), Math.toRadians(115),
                                 new TranslationalVelConstraint(40),
                                 new ProfileAccelConstraint(-40, 40))
                         .waitSeconds(0.5)
                         .strafeToLinearHeading(new Vector2d(-58, -35), Math.toRadians(115), // THIRD BLOCK POSITION
-                                new TranslationalVelConstraint(30),
-                                new ProfileAccelConstraint(-30, 30))
+                                new TranslationalVelConstraint(20),
+                                new ProfileAccelConstraint(-20, 20))
                         .build());
 
 
@@ -496,7 +526,7 @@ public class RedFiveSamp extends LinearOpMode {
                         .afterTime(0, V4BarDeposit)
                         .afterTime(0, ExtendoRetract)
                         .afterTime(2, OuttakeSample)
-                        .waitSeconds(0.4)
+                        .waitSeconds(0.2)
                         .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
                                 new TranslationalVelConstraint(20),
                                 new ProfileAccelConstraint(-20, 20))
@@ -518,8 +548,7 @@ public class RedFiveSamp extends LinearOpMode {
                         .afterTime(0, ExtendoRetract)
                         .afterTime(0.5, OuttakeSample)
                         .afterTime(1, ExtendoIntakeSub)
-                        .afterTime(1.5, V4BarGround)
-                        .afterTime(1.8, V4BarHP)
+                        .afterTime(1, V4BarHP)
                         .waitSeconds(0.5)
                         .strafeToLinearHeading(new Vector2d(-40, -6), Math.toRadians(0),
                                 new TranslationalVelConstraint(80),
@@ -535,19 +564,22 @@ public class RedFiveSamp extends LinearOpMode {
             while (!hasSample(colorSensor)) {
                 if (attemptCount == 0) {
                     Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6, Math.toRadians(0))) // TODO: CHECK POSE
-                            .afterTime(0, IntakeSub)
                             .afterTime(0, V4BarGround)
-                            .afterTime(0.5, ExtendoMax)
-                            .afterTime(0.75, slidesGround)
-                            .waitSeconds(0.5)
+                            .afterTime(0, ExtendoIntakeSubDeluxe)
+                            .afterTime(0.8, ExtendoIntakeSub)
+                            .afterTime(1.5, ExtendoMax)
+                            .afterTime(0, IntakeSubLong)
+                            .afterTime(0.5, holdDownSlides)
+                                    .waitSeconds(0.5)
                             .build());
 
+
                 } else {
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -9 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
                             .afterTime(0, IntakeSub)
                             .afterTime(0, V4BarGround)
                             .afterTime(0.5, ExtendoMax)
-                            .afterTime(0.75, slidesGround)
+                            .afterTime(0, holdDownSlides)
                             .waitSeconds(0.5)
                             .build());
                 }
@@ -556,11 +588,12 @@ public class RedFiveSamp extends LinearOpMode {
                     break;
                 } else {
 
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -9 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
                             .afterTime(0, ExtendoIntakeSubDeluxe)
-                            .afterTime(0.75, slidesGround)
-                            .afterTime(0, OuttakeSample)
-                            .strafeToLinearHeading(new Vector2d(-20, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
+                            .afterTime(0, holdDownSlides)
+                            .afterTime(0.4, OuttakeSample)
+                            .waitSeconds(0.1)
+                            .strafeToLinearHeading(new Vector2d(-20, -6 + (strafeIncrement * (attemptCount + 1))), Math.toRadians(0),
                                     new TranslationalVelConstraint(40),
                                     new ProfileAccelConstraint(-40, 40))
                             .build());
@@ -568,65 +601,36 @@ public class RedFiveSamp extends LinearOpMode {
                     attemptCount += 1;
                 }
 
-            }
-
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // DEPOSIT 5TH SAMPLE
-                    .afterTime(0, V4BarDeposit)
-                    .afterTime(0, ExtendoRetract)
-                    .afterTime(1.5, slidesBucket)
-                    .afterTime(3.25, OuttakeSample)
-                    .strafeToLinearHeading(new Vector2d(-50, -6 + strafeIncrement * (attemptCount + 1)), Math.toRadians(0),
-                            new TranslationalVelConstraint(80),
-                            new ProfileAccelConstraint(-80, 80))
-                    .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
-                            new TranslationalVelConstraint(40),
-                            new ProfileAccelConstraint(-40, 40))
-                    .build());
-
-/*
-            while (!hasSample(colorSensor) || attemptCount < 1000) { // Infinite attempts
-                if (attemptCount == 0){ // First attempt, don't strafe
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60, Math.toRadians(0))) // TODO: CHECK POSE
-                            .afterTime(0, IntakeSample)
-                            .afterTime(0, V4BarGround)
-                            .afterTime(0.5, ExtendoMax)
-                            .waitSeconds(0)
-                            .build());
-
-                } else { // Strafe on attempts other than first
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(0))) // TODO: CHECK POSE
-                            .afterTime(0, IntakeSample)
-
-                            .waitSeconds(0)
-                            .build());
-
-                }
-
-                if (hasSample(colorSensor)){
-                    break;
-                } else { // Cycling on to next attempt, outtaking sample to clear intake
-                    Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(0))) // TODO: CHECK POSE
+                if (gameClock.seconds() > 27) {
+                    Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -9 + attemptCount * strafeIncrement, Math.toRadians(0))) // TODO: CHECK POSE
+                            .afterTime(0, ExtendoRetract)
                             .afterTime(0, OuttakeSample)
-                            .afterTime(0, ExtendoIntakeSub)
-                            .strafeToConstantHeading(new Vector2d(10, -60 + (attemptCount*strafeIncrement)), // Strafe left strafeIncrement inches to get to new position
-                                new TranslationalVelConstraint(20),
-                                new ProfileAccelConstraint(-20, 20))
+                            .afterTime(0, V4BarDeposit)
+                            .strafeToLinearHeading(new Vector2d(-30, -6), Math.toRadians(0),
+                                    new TranslationalVelConstraint(40),
+                                    new ProfileAccelConstraint(-40, 40))
                             .build());
-
-                    attemptCount += 1;
                 }
-
 
             }
 
-            Actions.runBlocking(drive.actionBuilder(new Pose2d(10, -60 + (attemptCount*strafeIncrement), Math.toRadians(90))) // TODO: CHECK POSE
-                    .afterTime(0, V4BarDeposit)
+            if (!(gameClock.seconds() > 27)) {
+                Actions.runBlocking(drive.actionBuilder(new Pose2d(-20, -6 + attemptCount * strafeIncrement, Math.toRadians(0))) // DEPOSIT 5TH SAMPLE
+                        .afterTime(0, V4BarDeposit)
+                        .afterTime(0, ExtendoRetract)
+                        .afterTime(0, slidesZeroPower)
+                        .afterTime(1.5, slidesBucket)
+                        .afterTime(3.45, OuttakeSample)
+                        .strafeToLinearHeading(new Vector2d(-50, -10), Math.toRadians(0),
+                                new TranslationalVelConstraint(80),
+                                new ProfileAccelConstraint(-80, 80))
+                        .strafeToLinearHeading(new Vector2d(-54, -50), Math.toRadians(225), // BUCKET POSITION
+                                new TranslationalVelConstraint(40),
+                                new ProfileAccelConstraint(-40, 40))
+                        .waitSeconds(0.1)
+                        .build());
+            }
 
-
-                    .build());
-
-
-*/
 
 
         }

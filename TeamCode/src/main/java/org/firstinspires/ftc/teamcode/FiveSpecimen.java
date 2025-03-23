@@ -359,8 +359,8 @@ public class FiveSpecimen extends LinearOpMode {
             Actions.runBlocking(drive.actionBuilder(new Pose2d(48, -47, Math.toRadians(270)))
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(42, -10), Math.PI / 2,
-                            new TranslationalVelConstraint(95),
-                            new ProfileAccelConstraint(-95, 95))
+                            new TranslationalVelConstraint(65),
+                            new ProfileAccelConstraint(-65, 65))
                     .setReversed(true)
                     .splineToConstantHeading(new Vector2d(58, -10), Math.PI / 2,
                             new TranslationalVelConstraint(95),
