@@ -202,10 +202,10 @@ public class Teleop extends OpMode {
         if (currentExtendo <= 15000) {
             // V4Bar control (only moves after initial command)
             if (gamepad2.right_bumper) {
-                v4BarPosition -= 0.06;
+                v4BarPosition -= 0.09;
                 v4BarMoved = true;
             } else if (gamepad2.right_trigger > 0) {
-                v4BarPosition += 0.06;
+                v4BarPosition += 0.09;
                 v4BarMoved = true;
             }
 
