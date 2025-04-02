@@ -53,7 +53,7 @@ public class Teleop extends OpMode {
     private static final double HANGARMS_STATE_VERTICAL = 2700;
     private static final double HANGARMS_STATE_OUT = 7700;
     private static final double HANGARMS_STATE_HANGING1 = 600;
-    private static final double HANGARMS_STATE_HANGING2 = 2200;
+    private static final double HANGARMS_STATE_HANGING2 = 2300;
     private static final double HANGARMS_ENCODER_THRESHOLD = 250; // threshold for autonomous moving
     double currentVertPosition;
     double currentHangArmPosition;
