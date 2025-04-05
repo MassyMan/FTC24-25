@@ -202,10 +202,10 @@ public class Teleop extends OpMode {
         if (currentExtendo <= 15000) {
             // V4Bar control (only moves after initial command)
             if (gamepad2.right_bumper) {
-                v4BarPosition -= 0.09;
+                v4BarPosition -= 0.11;
                 v4BarMoved = true;
             } else if (gamepad2.right_trigger > 0) {
-                v4BarPosition += 0.09;
+                v4BarPosition += 0.11;
                 v4BarMoved = true;
             }
 
@@ -257,16 +257,16 @@ public class Teleop extends OpMode {
             } else if (gamepad2.right_stick_y > 0) {
                 vertL.setPower(-gamepad2.right_stick_y);
                 vertR.setPower(gamepad2.right_stick_y);
-            } else if (gamepad2.right_stick_y == 0) {
+            } else if ((gamepad2.right_stick_y == 0) && currentVertPosition < 400) {
                 vertL.setPower(0);
                 vertR.setPower(0);
+            } else {
+                vertL.setPower(HOLD_POWER);
+                vertR.setPower(-HOLD_POWER);
             }
             if (currentVertPosition < 0) {
                 vertL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 vertL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            } else if (currentVertPosition > 400 && gamepad2.right_stick_y == 0) {
-                vertL.setPower(HOLD_POWER);
-                vertR.setPower(-HOLD_POWER);
             }
 
 
