@@ -52,7 +52,7 @@ public class Teleop extends OpMode {
 
     private static final double HANGARMS_STATE_VERTICAL = 2700;
     private static final double HANGARMS_STATE_OUT = 7700;
-    private static final double HANGARMS_STATE_HANGING1 = 600;
+    private static final double HANGARMS_STATE_HANGING1 = 480;
     private static final double HANGARMS_STATE_HANGING2 = 2300;
     private static final double HANGARMS_ENCODER_THRESHOLD = 250; // threshold for autonomous moving
     double currentVertPosition;
@@ -175,15 +175,15 @@ public class Teleop extends OpMode {
                 slidR.setPower(0);
             }
         } else {
-            slidL.setPower(0.1);
-            slidR.setPower(-0.1);
+            slidL.setPower(0.15);
+            slidR.setPower(-0.15);
             extendoEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         if (gamepad2.y) {
-            slidL.setPower(0.1);
-            slidR.setPower(-0.1);
+            slidL.setPower(0.12);
+            slidR.setPower(-0.12);
             extendoEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             extendoEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
@@ -219,10 +219,12 @@ public class Teleop extends OpMode {
             }
 
             if (gamepad2.dpad_up) {
+                v4BarMoved = true;
                 v4BarPosition = 0.27;
             }
 
             if (gamepad2.b) {
+                v4BarMoved = true;
                 v4BarPosition = 0.5;
             }
 
@@ -292,11 +294,15 @@ public class Teleop extends OpMode {
 
         if (gamepad1.dpad_down) {
             wormManualControl = true;
+            holdExtendoIn = false;
+            holdVertsIn = false;
             wormL.setPower(1.0);
             wormR.setPower(1.0);
 
         } else if (gamepad1.dpad_up) {
             wormManualControl = true;
+            holdExtendoIn = false;
+            holdVertsIn = false;
             wormL.setPower(-1.0);
             wormR.setPower(-1.0);
         } else if (gamepad1.dpad_left){
@@ -330,7 +336,6 @@ public class Teleop extends OpMode {
 
         if (gamepad1.b) {
             HANGARMS_STATE = 3;
-            telemetry.addData("CHANGING STATE TO 2", "");
         }
 
         if (gamepad1.a && HANGARMS_STATE == 3) {
@@ -341,22 +346,22 @@ public class Teleop extends OpMode {
         if (!wormManualControl && hangArmsTriggered) {
             if (HANGARMS_STATE == 2) {
                 if (hangArmPos < HANGARMS_STATE_VERTICAL - HANGARMS_ENCODER_THRESHOLD) {
-                    wormL.setPower(0.5);
-                    wormR.setPower(0.5);
+                    wormL.setPower(0.4);
+                    wormR.setPower(0.4);
                 } else if (hangArmPos > HANGARMS_STATE_VERTICAL + HANGARMS_ENCODER_THRESHOLD) {
-                    wormL.setPower(-0.5);
-                    wormR.setPower(-0.5);
+                    wormL.setPower(-0.4);
+                    wormR.setPower(-0.4);
                 } else {
                     wormL.setPower(0);
                     wormR.setPower(0);
                 }
             } else if (HANGARMS_STATE == 3) {
                 if (hangArmPos < HANGARMS_STATE_OUT - HANGARMS_ENCODER_THRESHOLD) {
-                    wormL.setPower(0.8);
-                    wormR.setPower(0.8);
+                    wormL.setPower(0.7);
+                    wormR.setPower(0.7);
                 } else if (hangArmPos > HANGARMS_STATE_OUT + HANGARMS_ENCODER_THRESHOLD) {
-                    wormL.setPower(-0.8);
-                    wormR.setPower(-0.8);
+                    wormL.setPower(-0.7);
+                    wormR.setPower(-0.7);
                 } else {
                     wormL.setPower(0);
                     wormR.setPower(0);
@@ -368,6 +373,7 @@ public class Teleop extends OpMode {
 
                     holdExtendoIn = true;
                     holdVertsIn = true;
+
                 } else {
                     wormL.setPower(0);
                     wormR.setPower(0);
@@ -376,20 +382,20 @@ public class Teleop extends OpMode {
                     holdExtendoIn = true;
                     holdVertsIn = true;
                 }
-            } else if (HANGARMS_STATE == 4 && hangOneDone) {
-                if (hangArmPos < HANGARMS_STATE_HANGING2) {
-                    wormL.setPower(0.5);
-                    wormR.setPower(0.5);
-                    holdExtendoIn = true;
-                    holdVertsIn = true;
-                } else {
-                    wormL.setPower(0);
-                    wormR.setPower(0);
-                    holdExtendoIn = false;
-                    holdVertsIn = false;
+            } // else if (HANGARMS_STATE == 4 && hangOneDone) {
+               // if (hangArmPos < HANGARMS_STATE_HANGING2) {
+                   // wormL.setPower(0.5);
+                 //   wormR.setPower(0.5);
+                 //   holdExtendoIn = true;
+                //    holdVertsIn = true;
+              //  } else {
+              //      wormL.setPower(0);
+               //     wormR.setPower(0);
+               //     holdExtendoIn = false;
+                //    holdVertsIn = false;
 
-                }
-            }
+              //  }
+          //  }
         }
 
         if (colorSensor.green() > 1800) {
