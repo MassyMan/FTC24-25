@@ -231,13 +231,14 @@ public class Teleop extends OpMode {
         }
 
         // SPINNER
-        if (v4BarMoved) {
-            if (gamepad1.left_bumper) {
-                spinner.setPosition(SPINNER_OUT);
-            } else if (gamepad1.right_bumper) {
-                spinner.setPosition(SPINNER_IN);
-            }
+        if (gamepad1.left_bumper) {
+            spinner.setPosition(SPINNER_OUT);
+            v4BarMoved = true;
+        } else if (gamepad1.right_bumper) {
+            spinner.setPosition(SPINNER_IN);
+            v4BarMoved = true;
         }
+
 
         if (holdVertsIn) {
             spinner.setPosition(SPINNER_IN);
