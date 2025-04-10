@@ -35,6 +35,7 @@ public class RedFiveSamp extends LinearOpMode {
     ElapsedTime gameClock;
 
 
+
     // PIDF control variables
     public static double kP = 0.08;
     public static double kF = 0.2;
@@ -366,6 +367,7 @@ public class RedFiveSamp extends LinearOpMode {
             SlideLiftAction slidesGround = new SlideLiftAction(slideLift, -50);
             SlideLiftAction slidesBucket = new SlideLiftAction(slideLift, 1950);
 
+            gameClock = new ElapsedTime();
             gameClock.reset();
 
             V4BarAction V4BarDeposit = new V4BarAction(v4Bar, 0.27);
