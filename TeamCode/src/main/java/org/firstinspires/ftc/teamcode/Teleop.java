@@ -128,6 +128,7 @@ public class Teleop extends OpMode {
         wormL.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         wormR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         wormR.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        vertR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hangArmPos = wormL.getCurrentPosition();
         EHubPowerOutHappened = false;
         // Initialize encoder and previous voltage
@@ -323,7 +324,7 @@ public class Teleop extends OpMode {
             hangArmsTriggered = true;
         }
 
-        if ((Math.abs(hangArmPos - wormL.getCurrentPosition()) > 200) && !EHubPowerOutHappened); {
+        if ((Math.abs(hangArmPos - wormL.getCurrentPosition()) > 700) && !EHubPowerOutHappened); {
             EHubPowerOutHappened = true;
         }
 
